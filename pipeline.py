@@ -2,9 +2,15 @@ import sys,os,math,random,subprocess
 import numpy as np
 
 lipids=["DPPC", "DOPC", "POPC"]
+
+# individual simulations are specified with [[t], [b], [a]]
+# where [t] is the list of lipid concentrations for the top leaflet
+#       [b] is the list of lipid concentrations for the bottom leaflet
+#       [a] is the list of asymmetries
+# where the ordering for elements of [t] and [b] are relative to the lipids array above
 exp1 = [[[1, 0, 0], [1, 0, 0], [0, 10, 20, 30, 40, 50]],
-		[[0, 1, 0], [0, 1, 0], [0, 10, 20, 30, 40, 50]],
-		[[0, 0, 1], [0, 0, 1], [0, 10, 20, 30, 40, 50]]]
+	[[0, 1, 0], [0, 1, 0], [0, 10, 20, 30, 40, 50]],
+	[[0, 0, 1], [0, 0, 1], [0, 10, 20, 30, 40, 50]]]
 
 def simulate(bilayer):
 	args = ""
