@@ -16,7 +16,7 @@ title                    = Martini
 
 integrator               = md
 dt                       = 0.02  
-nsteps                   = 1700000
+nsteps                   = REPLACE5
 nstcomm                  = 100
 comm-grps		         = 
 

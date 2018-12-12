@@ -15,7 +15,7 @@ title                    = Martini
 ; Time steps smaller than 20 fs are not required unless specifically stated in the itp file.
 
 integrator               = steep
-dt                       = 0.01 
+dt                       = 0.02 
 nsteps                   = 10000
 nstcomm                  = 100
 comm-grps		         = 
