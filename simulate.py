@@ -112,12 +112,12 @@ def simulate(lipids, bilayer):
 		else:
 			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 			subprocess.call(["./20fs.sh", descr, counts, run_num, n, bilayer[3]])
-	elif run_type[1] == 'relax':
+	elif 'relax' in run_type:
 		if platform.system() == 'Darwin' or 'macosx':
 			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 		else:
 			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
-	elif run_type[1] == '20fs':
+	elif '20fs' in run_type:
 		if platform.system() == 'Darwin' or 'macosx':
 			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
 		else:
@@ -139,12 +139,25 @@ def main():
 		for i in upper:
 			total += float(i)
 		queue = []
-		for asym in asymmetry:
-			percentage = 1 - float(asym)/total
-			upper1 = []
-			for i in range(len(upper)):
-				upper1.append(str(round(float(upper[i])*(percentage))))
-			queue.append([upper, lower, asym, steps])
+		if 'kc' in run_type and 'CHOL' in lipidtype: #check for when we want to keep the chlesterols
+			CHOLindex = lipidtype.index('CHOL')
+			CHOL = upper[CHOLindex]
+			for asym in asymmetry:
+				percentage = 1 - float(asym)/(total-int(CHOL))
+				upper1 = []
+				for i in range(len(upper)):
+					if i == CHOLindex:
+						upper1.append(str(upper[i]))
+					else:
+						upper1.append(str(round(float(upper[i])*(percentage))))
+				queue.append([upper1, lower, asym, steps])
+		else:
+			for asym in asymmetry:
+				percentage = 1 - float(asym)/total
+				upper1 = []
+				for i in range(len(upper)):
+					upper1.append(str(round(float(upper[i])*(percentage))))
+				queue.append([upper1, lower, asym, steps])
 		while len(queue) > 0:
 			e = queue.pop(0)
 			simulate(lipidtype, e)
