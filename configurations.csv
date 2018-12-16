@@ -1,12 +1,6 @@
-simulation1,,,,,,
-lipid type,DOPC,POPC,PAPE,,,
-upperLeaflet,300,400,300,,,
-lowerLeaflet,300,300,400,,,
-asymmetry,100,25,50,75,,
-steps,20000000,,,,,
-simulation2,,,,,,
-lipid type,DPPC,POPC,PAPE,,,
-upperLeaflet,200,300,500,,,
-lowerLeaflet,200,300,500,,,
-asymmetry,100,25,50,75,100,
-steps,20000000,,,,,
+simulation1,,,,,,,,
+lipid type,POPC,PAPC,POPE,DIPE,DPSM,PAPS,PAP6,CHOL
+upperLeaflet,243,121,20,61,242,0,0,313
+lowerLeaflet,139,75,54,161,108,161,22,280
+asymmetry,17,18,19,20,21,22,23,
+steps,15000000,,,,,,,
