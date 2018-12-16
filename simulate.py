@@ -106,19 +106,19 @@ def simulate(lipids, bilayer):
 	n += 1
 	run_num = "run%04d" % run_number()
 	if len(run_type) == 1: #provides options for doing relaxation simulations, 20fs simulations or both.
-		if platform.system() == 'Darwin' or 'macosx':
+		if platform.system() == 'Darwin' or platform.system() == 'macosx':
 			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, n, bilayer[3]])
 		else:
 			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 			subprocess.call(["./20fs.sh", descr, counts, run_num, n, bilayer[3]])
 	elif 'relax' in run_type:
-		if platform.system() == 'Darwin' or 'macosx':
+		if platform.system() == 'Darwin' or platform.system() == 'macosx':
 			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 		else:
 			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 	elif '20fs' in run_type:
-		if platform.system() == 'Darwin' or 'macosx':
+		if platform.system() == 'Darwin' or platform.system() == 'macosx':
 			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
 		else:
 			subprocess.call(["./20fs.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
