@@ -52,11 +52,11 @@ mkdir em
 cd em
 python2.7 ../../files/insane.py $args
 cat ../../files/header.txt top.top > topol.top
-sed -i " " "3d" topol.top
+sed -i " " "5d" topol.top
 cp ../../files/minimization.mdp ../em/
 make_mdp minimization.mdp
 gmx grompp -f minimization.mdp -c bilayer.gro -p topol.top -o em.tpr
-gmx mdrun -deffnm em -v -nt 1
+gmx mdrun -deffnm em -v
 cd ..
 
 ### 1fs ###
@@ -67,7 +67,7 @@ cd 1fs
 cp ../../files/martini_v2.x_new-rf.1fs.mdp ../1fs/
 make_mdp "martini_v2.x_new-rf.1fs.mdp"
 gmx grompp -f martini_v2.x_new-rf.1fs.mdp -c em.gro -p topol.top -o 1fs.tpr
-gmx mdrun -deffnm 1fs -v -nt 2
+gmx mdrun -deffnm 1fs -v -nt 2 -dlb yes
 cd ..
 
 ### 5fs ### 
@@ -78,7 +78,7 @@ cd 5fs
 cp ../../files/martini_v2.x_new-rf.5fs.mdp ../5fs/
 make_mdp "martini_v2.x_new-rf.5fs.mdp"
 gmx grompp -f martini_v2.x_new-rf.5fs.mdp -c 1fs.gro -p topol.top -o 5fs.tpr
-gmx mdrun -deffnm 5fs -v -nt 2
+gmx mdrun -deffnm 5fs -v -nt 2 -dlb yes
 cd ..
 
 ### 15fs ###
@@ -89,6 +89,6 @@ cd 15fs
 cp ../../files/martini_v2.x_new-rf.15fs.mdp ../15fs/
 make_mdp "martini_v2.x_new-rf.15fs.mdp"
 gmx grompp -f martini_v2.x_new-rf.15fs.mdp -c 5fs.gro -p topol.top -o 15fs.tpr
-gmx mdrun -deffnm 15fs -v -nt 2
+gmx mdrun -deffnm 15fs -v -nt 2 -dlb yes
 cd ../..
 

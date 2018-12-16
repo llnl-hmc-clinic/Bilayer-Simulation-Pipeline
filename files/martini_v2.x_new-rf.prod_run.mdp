@@ -16,7 +16,7 @@ title                    = Martini
 
 integrator               = md
 dt                       = 0.02  
-nsteps                   = REPLACE5
+nsteps                   = 2500000
 nstcomm                  = 100
 comm-grps		         = 
 
@@ -98,7 +98,7 @@ compressibility          = REPLACE3
 ref_p                    = REPLACE4
 
 gen_vel                  = no
-gen_temp                 = 320
+gen_temp                 = 310
 gen_seed                 = 473529
 
 ; MARTINI and CONSTRAINTS 

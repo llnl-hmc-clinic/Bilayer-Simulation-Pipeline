@@ -26,7 +26,7 @@ csvConfig = "./configurations.csv"#this is the input file in csv format
 iniConfig = './configurations.ini'#this is the input file in ini format
 data = {} #this collects the simulation parameters from the configuration file
 next_run = 0#this keeps track of the number of runs we are doing
-SYSTEM_SIZE = [25, 25, 15]#this is the system size of the simulation
+SYSTEM_SIZE = ["12", "12", "10"]#this is the system size of the simulation
 run_type = sys.argv #this is the system arguments that either includes a run-type or not
 
 
@@ -95,9 +95,9 @@ def simulate(lipids, bilayer):
 		if int(bilayer[1][i]) > 0:
 			args += "-l " + l + ":" + bilayer[1][i] + " "
 			Ltextnote += l + ": " + bilayer[1][i] + ", "
-		if int(bilayer[0][i]) > 0 or bilayer[1][i] > 0:
+		if int(bilayer[0][i]) > 0 or int(bilayer[1][i]) > 0:
 			descr += l + " "
-			counts += str(bilayer[0][i] + bilayer[1][i]) + " "
+			counts += str(bilayer[0][i] + str(bilayer[1][i])) + " "
 			n += 1
 		i += 1
 	args += "-pbc square -sol W -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
@@ -108,10 +108,10 @@ def simulate(lipids, bilayer):
 	if len(run_type) == 1: #provides options for doing relaxation simulations, 20fs simulations or both.
 		if platform.system() == 'Darwin' or platform.system() == 'macosx':
 			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
-			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, n, bilayer[3]])
+			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, str(n), str(bilayer[3])])
 		else:
 			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
-			subprocess.call(["./20fs.sh", descr, counts, run_num, n, bilayer[3]])
+			subprocess.call(["./20fs.sh", descr, counts, run_num, str(n), str(bilayer[3])])
 	elif 'relax' in run_type:
 		if platform.system() == 'Darwin' or platform.system() == 'macosx':
 			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
@@ -149,14 +149,14 @@ def main():
 					if i == CHOLindex:
 						upper1.append(str(upper[i]))
 					else:
-						upper1.append(str(round(float(upper[i])*(percentage))))
+						upper1.append(str(int(round(float(upper[i])*(percentage)))))
 				queue.append([upper1, lower, asym, steps])
 		else:
 			for asym in asymmetry:
 				percentage = 1 - float(asym)/total
 				upper1 = []
 				for i in range(len(upper)):
-					upper1.append(str(round(float(upper[i])*(percentage))))
+					upper1.append(str(int(round(float(upper[i])*(percentage)))))
 				queue.append([upper1, lower, asym, steps])
 		while len(queue) > 0:
 			e = queue.pop(0)
