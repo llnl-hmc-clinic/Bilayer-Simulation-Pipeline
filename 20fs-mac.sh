@@ -45,5 +45,5 @@ cp 15fs/15fs.gro 15fs/topol.top 20fs
 cd 20fs
 cp ../../files/martini_v2.x_new-rf.prod_run.mdp ../20fs/
 make_mdp "martini_v2.x_new-rf.prod_run.mdp"
-gmx grompp -f martini_v2.x_new-rf.prod_run.mdp -c 15fs.gro -p topol.top -o 20fs.tpr
+gmx grompp -f martini_v2.x_new-rf.prod_run.mdp -c 15fs.gro -p topol.top -o 20fs.tpr -maxwarn 1
 gmx mdrun -deffnm 20fs -v -nt 8

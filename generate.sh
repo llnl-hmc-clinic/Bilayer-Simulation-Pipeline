@@ -55,7 +55,7 @@ cat ../../files/header.txt top.top > topol.top
 sed -i 5d topol.top
 cp ../../files/minimization.mdp ../em/
 make_mdp "minimization.mdp"
-gmx grompp -f minimization.mdp -c bilayer.gro -p topol.top -o em.tpr
+gmx grompp -f minimization.mdp -c bilayer.gro -p topol.top -o em.tpr -maxwarn 1
 gmx mdrun -deffnm em -v
 cd ..
 
@@ -66,7 +66,7 @@ cp em/em.gro em/topol.top 1fs
 cd 1fs
 cp ../../files/martini_v2.x_new-rf.1fs.mdp ../1fs/
 make_mdp "martini_v2.x_new-rf.1fs.mdp"
-gmx grompp -f martini_v2.x_new-rf.1fs.mdp -c em.gro -p topol.top -o 1fs.tpr
+gmx grompp -f martini_v2.x_new-rf.1fs.mdp -c em.gro -p topol.top -o 1fs.tpr -maxwarn 1
 gmx mdrun -deffnm 1fs -v -nt 2 -dlb yes
 cd ..
 
@@ -77,7 +77,7 @@ cp 1fs/1fs.gro 1fs/topol.top 5fs
 cd 5fs
 cp ../../files/martini_v2.x_new-rf.5fs.mdp ../5fs/
 make_mdp "martini_v2.x_new-rf.5fs.mdp"
-gmx grompp -f martini_v2.x_new-rf.5fs.mdp -c 1fs.gro -p topol.top -o 5fs.tpr
+gmx grompp -f martini_v2.x_new-rf.5fs.mdp -c 1fs.gro -p topol.top -o 5fs.tpr -maxwarn 1
 gmx mdrun -deffnm 5fs -v -nt 2 -dlb yes
 cd ..
 
@@ -88,7 +88,7 @@ cp 5fs/5fs.gro 5fs/topol.top 15fs
 cd 15fs
 cp ../../files/martini_v2.x_new-rf.15fs.mdp ../15fs/
 make_mdp "martini_v2.x_new-rf.15fs.mdp"
-gmx grompp -f martini_v2.x_new-rf.15fs.mdp -c 5fs.gro -p topol.top -o 15fs.tpr
+gmx grompp -f martini_v2.x_new-rf.15fs.mdp -c 5fs.gro -p topol.top -o 15fs.tpr -maxwarn 1
 gmx mdrun -deffnm 15fs -v -nt 2 -dlb yes
 cd ../..
 
