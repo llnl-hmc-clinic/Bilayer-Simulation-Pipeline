@@ -28,7 +28,7 @@ nstenergy                = 100
 nstxout-compressed       = 1000
 compressed-x-precision   = 100
 compressed-x-grps        = 
-energygrps               = REPLACE0
+energygrps               = Solvent Membrane
 
 ; NEIGHBOURLIST and MARTINI 
 ; To achieve faster simulations in combination with the Verlet-neighborlist
@@ -88,17 +88,17 @@ rvdw                     = 1.1
 ; coupling should be done semiisotropic.
 
 tcoupl                   = v-rescale 
-tc-grps                  = REPLACE0
-tau_t                    = REPLACE1 
-ref_t                    = REPLACE2
+tc-grps                  = Solvent Membrane
+tau_t                    = 1.0 1.0 
+ref_t                    = 320 320
 Pcoupl                   = parrinello-rahman 
 Pcoupltype               = semiisotropic
 tau_p                    = 12.0 ;parrinello-rahman is more stable with larger tau-p, DdJ, 20130422
-compressibility          = REPLACE3
-ref_p                    = REPLACE4
+compressibility          = 3e-4 3e-4
+ref_p                    = 1.0  1.0
 
 gen_vel                  = no
-gen_temp                 = 310
+gen_temp                 = 320
 gen_seed                 = 473529
 
 ; MARTINI and CONSTRAINTS 

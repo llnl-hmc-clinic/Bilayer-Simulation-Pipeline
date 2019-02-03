@@ -113,7 +113,7 @@ lipidsa.update({      # 1     2    3    4    5   6   7   8    9    10    11    1
     "POP1": (moltype, " C1   C2   C3    CP  P1   -   -  GL1  GL2  C1A  C2A  D3A  C4A   -    -   C1B  C2B  C3B  C4B   -    - "),
     "POP2": (moltype, " C1   C2   C3    CP  P1  P2   -  GL1  GL2  C1A  C2A  D3A  C4A   -    -   C1B  C2B  C3B  C4B   -    - "),
     "POP3": (moltype, " C1   C2   C3    CP  P1  P2  P3  GL1  GL2  C1A  C2A  D3A  C4A   -    -   C1B  C2B  C3B  C4B   -    - "),
-    "PAP6": (moltype, " C1   C2   C3    CP  P4  P5   -  GL1  GL2  D1A  D2A  D3A  D4A  C5A   -   C1B  C2B  C3B  C4B   -    - "),
+    "PAP6": (moltype, " C1   C2   C3   PO4  P4  P5   -  GL1  GL2  D1A  D2A  D3A  D4A  C5A   -   C1B  C2B  C3B  C4B   -    - "),
 ## Templates using the old lipid names and definitions
   "PI.o"  : (moltype, " C1   C2   C3    CP   -   -   -  GL1  GL2  C1A  C2A  C3A  C4A   -    -   CU1  CU2  CU3  CU4  CU5   - "),
   "PI34.o": (moltype, " C1   C2   C3    CP PO1 PO2   -  GL1  GL2  C1A  C2A  C3A  C4A   -    -   CU1  CU2  CU3  CU4  CU5   - "),
@@ -254,7 +254,7 @@ lipidsa.update({
 
 
 # Lists for automatic charge determination
-charges = {"ARG":1, "LYS":1, "ASP":-1, "GLU":-1, "DOPG":-1, "POPG":-1, "DOPS":-1, "POPS":-1, "DSSQ":-1}
+charges = {"ARG":1, "LYS":1, "ASP":-1, "GLU":-1, "DOPG":-1, "POPG":-1, "DOPS":-1, "PAPS":-1, "POPS":-1, "DSSQ":-1, "PAP6":-5}
 
 a,  b  = math.sqrt(2)/20, math.sqrt(2)/60
 ct, st = math.cos(math.pi*109.47/180), math.sin(math.pi*109.47/180) # Tetrahedral
@@ -1385,7 +1385,7 @@ if lipL:
     num_lo     = [int(len(lower)*i/totL) for i in numL]
     lip_lo     = [l for i,l in zip(num_lo,lipL) for j in range(i)]
     leaf_lo    = (-1,zip(lip_lo,lower),lo_lipdx,lo_lipdy)
-    
+ 
     molecules  = zip(lipU,num_up) + zip(lipL,num_lo)
 
     kick       = options["-rand"].value

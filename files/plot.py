@@ -137,7 +137,7 @@ def plot_data(data, metadata, window=1, interactive=True, outfile=None,
     ax.set_ylabel(metadata['labels'].get('yaxis', ''))
     ax.set_title(metadata.get('title', ''))
     
-    ax.set_axis_bgcolor(bg_color)
+    #ax.set_axis_bgcolor(bg_color)
     ax.grid('on')
     
     try:
