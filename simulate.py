@@ -100,11 +100,12 @@ def simulate(lipids, bilayer):
 			counts += str(bilayer[0][i] + str(bilayer[1][i])) + " "
 			n += 1
 		i += 1
-	args += "-pbc square -sol W -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
+	args += "-pbc square -sol W -salt 0.15 -charge -56 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
 	args += "-asym " + str(bilayer[2])
 	descr += "W "
 	n += 1
 	run_num = "run%04d" % run_number()
+	print(args)
 	if len(run_type) == 1: #provides options for doing relaxation simulations, 20fs simulations or both.
 		if platform.system() == 'Darwin' or platform.system() == 'macosx':
 			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
