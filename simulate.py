@@ -104,24 +104,24 @@ def simulate(lipids, bilayer):
 	args += "-asym " + str(bilayer[2])
 	descr += "W "
 	n += 1
-	run_num = "run%04d" % run_number()
-	print(args)
-	if len(run_type) == 1: #provides options for doing relaxation simulations, 20fs simulations or both.
-		if platform.system() == 'Darwin' or platform.system() == 'macosx':
-			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
-			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, str(n), str(bilayer[3])])
-		else:
-			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
-			subprocess.call(["./20fs.sh", descr, counts, run_num, str(n), str(bilayer[3])])
-	elif 'relax' in run_type:
+	run_num = "run" + str(run_number())
+	if 'relax' in run_type:
 		if platform.system() == 'Darwin' or platform.system() == 'macosx':
 			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 		else:
 			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 	elif '20fs' in run_type:
 		if platform.system() == 'Darwin' or platform.system() == 'macosx':
+			print(run_num)
 			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
 		else:
+			subprocess.call(["./20fs.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
+	else: #provides options for doing relaxation simulations, 20fs simulations or both.
+		if platform.system() == 'Darwin' or platform.system() == 'macosx':
+			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
+			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
+		else:
+			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
 			subprocess.call(["./20fs.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
 """
 	In the main function we create a queue of simulations and run them through calling
@@ -161,7 +161,8 @@ def main():
 				queue.append([upper1, lower, asym, steps])
 		while len(queue) > 0:
 			e = queue.pop(0)
-			simulate(lipidtype, e)
+			for j in range(3):
+				simulate(lipidtype, e)
 
 main()
 

@@ -58,5 +58,5 @@ cd 15fs
 cp ../../files/martini_v2.x_new-rf.15fs.mdp ../5fs/index.ndx ../15fs/
 gmx grompp -f martini_v2.x_new-rf.15fs.mdp -c 5fs.gro -p topol.top -n index.ndx -o 15fs.tpr
 gmx mdrun -deffnm 15fs -v -nt 6 -dlb yes
-cd ..
+cd ../..
 
