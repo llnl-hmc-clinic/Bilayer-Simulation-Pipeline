@@ -33,6 +33,8 @@ lipidsa.update({      # 1   2   3   4   5   6   7   8   9  10  11  12  13  14  1
     "DPPC": (moltype, " -   -   -  NC3  -  PO4 GL1 GL2 C1A C2A C3A C4A  -   -  C1B C2B C3B C4B  -   - "),
     "DBPC": (moltype, " -   -   -  NC3  -  PO4 GL1 GL2 C1A C2A C3A C4A C5A  -  C1B C2B C3B C4B C5B  - "),
     "POPC": (moltype, " -   -   -  NC3  -  PO4 GL1 GL2 C1A D2A C3A C4A  -   -  C1B C2B C3B C4B  -   - "),
+    "PAPC": (moltype, " -   -   -  NC3  -  PO4 GL1 GL2 D1A D2A D3A D4A  -   -  C5A C1B C2B C3B C4B  - "),
+    "PAPS": (moltype, " -   -   -  CNO  -  PO4 GL1 GL2 D1A D2A D3A D4A  -   -  C5A C1B C2B C3B C4B  - "),
     "DOPC": (moltype, " -   -   -  NC3  -  PO4 GL1 GL2 C1A D2A C3A C4A  -   -  C1B D2B C3B C4B  -   - "),
     "DAPC": (moltype, " -   -   -  NC3  -  PO4 GL1 GL2 D1A D2A D3A D4A C5A  -  D1B D2B D3B D4B C5B  - "),
     "DIPC": (moltype, " -   -   -  NC3  -  PO4 GL1 GL2 C1A D2A D3A C4A  -   -  C1B D2B D3B C4B  -   - "),
@@ -43,11 +45,8 @@ lipidsa.update({      # 1   2   3   4   5   6   7   8   9  10  11  12  13  14  1
     "DPPE": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A C2A C3A C4A  -   -  C1B C2B C3B C4B  -   - "),
     "DBPE": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A C2A C3A C4A C5A  -  C1B C2B C3B C4B C5B  - "),
     "POPE": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A D2A C3A C4A  -   -  C1B C2B C3B C4B  -   - "),
-    "PAPE": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 D1A D2A D3A D4A C5A  -  C1B C2B C3B C4B  -   - "),
-    "PAPC": (moltype, " -   -   -  NC3  -  PO4 GL1 GL2 D1A D2A D3A D4A C5A  -  C1B C2B C3B C4B  -   - "),
-    "PAPS": (moltype, "            CNO  -  PO4 GL1 GL2 D1A D2A D3A D4A C5A  -  C1B C2B C3B C4B  -   - "),
-    "DIPE": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A D2A D3A C4A  -   -  C1B D2B D3B C4B  -   - "),
     "DOPE": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A D2A C3A C4A  -   -  C1B D2B C3B C4B  -   - "),
+    "DIPE": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A D2A D3A C4A  -   -  C1B D2B D3B C4B  -   - "),
     "POPG": (moltype, " -   -   -  GL0  -  PO4 GL1 GL2 C1A D2A C3A C4A  -   -  C1B C2B C3B C4B  -   - "),
     "DOPG": (moltype, " -   -   -  GL0  -  PO4 GL1 GL2 C1A D2A C3A C4A  -   -  C1B D2B C3B C4B  -   - "),
     "POPS": (moltype, " -   -   -  CN0  -  PO4 GL1 GL2 C1A D2A C3A C4A  -   -  C1B C2B C3B C4B  -   - "),
@@ -76,7 +75,6 @@ lipidsa.update({      # 1   2   3   4   5   6   7   8   9  10  11  12  13  14  1
   "DMPE.o": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A C2A C3A  -   -   -  C1B C2B C3B  -   -   - "),
   "DSPE.o": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A C2A C3A C4A C5A  -  C1B C2B C3B C4B C5B  - "),
   "POPE.o": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A C2A C3A C4A  -   -  C1B C2B D3B C4B C5B  - "),
-  "PAPE.o": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 D1A D2A D3A D4A C5A  -  C1B C2B C3B C4B  -   - "),
   "DOPE.o": (moltype, " -   -   -  NH3  -  PO4 GL1 GL2 C1A C2A D3A C4A C5A  -  C1B C2B D3B C4B C5B  - "),
   "PPCS.o": (moltype, " -   -   -  NC3  -  PO4 AM1 AM2 C1A C2A C3A C4A  -   -  D1B C2B C3B C4B  -   - "),
   "DOPG.o": (moltype, " -   -   -  GL0  -  PO4 GL1 GL2 C1A C2A D3A C4A C5A  -  C1B C2B D3B C4B C5B  - "),
@@ -113,7 +111,7 @@ lipidsa.update({      # 1     2    3    4    5   6   7   8    9    10    11    1
     "POP1": (moltype, " C1   C2   C3    CP  P1   -   -  GL1  GL2  C1A  C2A  D3A  C4A   -    -   C1B  C2B  C3B  C4B   -    - "),
     "POP2": (moltype, " C1   C2   C3    CP  P1  P2   -  GL1  GL2  C1A  C2A  D3A  C4A   -    -   C1B  C2B  C3B  C4B   -    - "),
     "POP3": (moltype, " C1   C2   C3    CP  P1  P2  P3  GL1  GL2  C1A  C2A  D3A  C4A   -    -   C1B  C2B  C3B  C4B   -    - "),
-    "PAP6": (moltype, " C1   C2   C3   PO4  P4  P5   -  GL1  GL2  D1A  D2A  D3A  D4A  C5A   -   C1B  C2B  C3B  C4B   -    - "),
+    "PAP6": (moltype, " C1   C2   C3        PO4 P4  P5  GL1 GL2   D1A  D2A  D3A  D4A   -    -   C5A  C1B  C2B  C3B  C4B   - "),
 ## Templates using the old lipid names and definitions
   "PI.o"  : (moltype, " C1   C2   C3    CP   -   -   -  GL1  GL2  C1A  C2A  C3A  C4A   -    -   CU1  CU2  CU3  CU4  CU5   - "),
   "PI34.o": (moltype, " C1   C2   C3    CP PO1 PO2   -  GL1  GL2  C1A  C2A  C3A  C4A   -    -   CU1  CU2  CU3  CU4  CU5   - "),
@@ -254,7 +252,7 @@ lipidsa.update({
 
 
 # Lists for automatic charge determination
-charges = {"ARG":1, "LYS":1, "ASP":-1, "GLU":-1, "DOPG":-1, "POPG":-1, "DOPS":-1, "PAPS":-1, "POPS":-1, "DSSQ":-1, "PAP6":-5}
+charges = {"ARG":1, "LYS":1, "ASP":-1, "GLU":-1, "DOPG":-1, "POPG":-1, "DOPS":-1, "POPS":-1, "DSSQ":-1, "PAPS:":-1, "PAP6":-5}
 
 a,  b  = math.sqrt(2)/20, math.sqrt(2)/60
 ct, st = math.cos(math.pi*109.47/180), math.sin(math.pi*109.47/180) # Tetrahedral
@@ -1361,12 +1359,12 @@ if lipL:
 
     # Extract coordinates, taking asymmetry in account
     asym  = options["-asym"].value or 0
-    upper = [i[1:] for i in upper[max(0, asym):]]
-    lower = [i[1:] for i in lower[max(0,-asym):]]
+    upper = [i[1:] for i in upper]
+    lower = [i[1:] for i in lower]
 
-    print >>sys.stderr, "; X: %.3f (%d bins) Y: %.3f (%d bins) in upper leaflet"%(pbcx,up_lipids_x,pbcy,up_lipids_y)
-    print >>sys.stderr, "; X: %.3f (%d bins) Y: %.3f (%d bins) in lower leaflet"%(pbcx,lo_lipids_x,pbcy,lo_lipids_y)
-    print >>sys.stderr, "; %d lipids in upper leaflet, %d lipids in lower leaflet"%(len(upper),len(lower))
+    #print >>sys.stderr, "; X: %.3f (%d bins) Y: %.3f (%d bins) in upper leaflet"%(pbcx,up_lipids_x,pbcy,up_lipids_y)
+    #print >>sys.stderr, "; X: %.3f (%d bins) Y: %.3f (%d bins) in lower leaflet"%(pbcx,lo_lipids_x,pbcy,lo_lipids_y)
+    #print >>sys.stderr, "; %d lipids in upper leaflet, %d lipids in lower leaflet"%(len(upper),len(lower))
 
     # Types of lipids, relative numbers, fractions and numbers
 
@@ -1376,6 +1374,21 @@ if lipL:
     lipU, numU = zip(*[ parse_mol(i) for i in lipU ])
     totU       = float(sum(numU))
     num_up     = [int(len(upper)*i/totU) for i in numU]
+
+    # explicitly remove lipids until reaching right asymmetry
+    for i in range(0, asym):
+      r = random.randint(1, sum(num_up))
+      counter = 0
+      for j in range(0, len(num_up)):
+        counter += num_up[j]
+        if (counter >= r):
+          num_up[j] -= 1
+          break
+
+    numCharge = int(-1 * num_up[5] + -5 * num_up[6])
+    options["-charge"].value = str(numCharge)
+
+
     lip_up     = [l for i,l in zip(num_up,lipU) for j in range(i)]
     leaf_up    = ( 1,zip(lip_up,upper),up_lipdx,up_lipdy)
     
@@ -1385,7 +1398,7 @@ if lipL:
     num_lo     = [int(len(lower)*i/totL) for i in numL]
     lip_lo     = [l for i,l in zip(num_lo,lipL) for j in range(i)]
     leaf_lo    = (-1,zip(lip_lo,lower),lo_lipdx,lo_lipdy)
- 
+    
     molecules  = zip(lipU,num_up) + zip(lipL,num_lo)
 
     kick       = options["-rand"].value
@@ -1450,13 +1463,13 @@ for j in protein.atoms:
 charge  = mcharge + pcharge
 plen, mlen, slen = 0, 0, 0
 plen = protein and len(protein) or 0
-print >>sys.stderr, "; NDX Solute %d %d" % (1, protein and plen or 0)
-print >>sys.stderr, "; Charge of protein: %f" % pcharge
+#print >>sys.stderr, "; NDX Solute %d %d" % (1, protein and plen or 0)
+#print >>sys.stderr, "; Charge of protein: %f" % pcharge
 
 mlen = membrane and len(membrane) or 0
-print >>sys.stderr, "; NDX Membrane %d %d" % (1+plen, membrane and plen+mlen or 0)
-print >>sys.stderr, "; Charge of membrane: %f" % mcharge
-print >>sys.stderr, "; Total charge: %f" % charge
+#print >>sys.stderr, "; NDX Membrane %d %d" % (1+plen, membrane and plen+mlen or 0)
+#print >>sys.stderr, "; Charge of membrane: %f" % mcharge
+#print >>sys.stderr, "; Total charge: %f" % charge
 
 
 def _point(y,phi):
@@ -1557,7 +1570,6 @@ if solv:
     ngrid   = len(grid) - nna - ncl
     num_sol = [int(ngrid*i/totS) for i in solnums]
 
-
     # Add salt to solnames and num_sol
     if nna:
         solnames.append("NA+")
@@ -1605,9 +1617,9 @@ else:
 ## Write the output ##
 
 slen = solvent and len(sol) or 0
-print >>sys.stderr, "; NDX Solvent %d %d" % (1+plen+mlen, solvent and plen+mlen+slen or 0)
-print >>sys.stderr, "; NDX System %d %d" % (1, plen+mlen+slen)
-print >>sys.stderr, "; \"I mean, the good stuff is just INSANE\" --Julia Ormond"
+#print >>sys.stderr, "; NDX Solvent %d %d" % (1+plen+mlen, solvent and plen+mlen+slen or 0)
+#print >>sys.stderr, "; NDX System %d %d" % (1, plen+mlen+slen)
+#print >>sys.stderr, "; \"I mean, the good stuff is just INSANE\" --Julia Ormond"
 
 # Open the output stream
 oStream = options["-o"] and open(options["-o"].value,"w") or sys.stdout
