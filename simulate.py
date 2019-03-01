@@ -28,26 +28,42 @@ data = {} #this collects the simulation parameters from the configuration file
 next_run = 0#this keeps track of the number of runs we are doing
 SYSTEM_SIZE = ["12", "12", "10"]#this is the system size of the simulation
 run_type = sys.argv #this is the system arguments that either includes a run-type or not
-
+maxAttempt = 3
 
 
 """ importcsv imports a csv file that has specs for simulations and convert it 
 	to a dictionary.
 """
 
+def isLast(itr):
+  old = itr.next()
+  for new in itr:
+    yield False, old
+    old = new
+  yield True, old
+
 def importcsv(csvfile):
 	with open(csvfile, 'r') as fin:
 		reader=csv.reader(fin, skipinitialspace=True, quotechar="'")
+		entry = [0]
 		for row in reader:
-			if('simulation' in row[0]):
-				data[row[0]]= {}
-				for i in range(0,5):
+			if('simulation' in row[0] or 'simulation' in entry[0]):				
+				if('simulation' in row[0]):
 					entry = next(reader)
+				if('simulation' in entry[0]):
+					exchange = row
+					row = entry
+					entry = exchange
+				data[row[0]]= {}
+				#keeps recording data in one simulation
+				while 'simulation' not in entry[0] and 'end' not in entry[0]:
 					data[row[0]][entry[0]]= entry[1:]
-					for j in range(0,len(entry)): #prevent empty cells from being read
+					for j in range(0,len(entry)): 
+					#prevents empty cells from being read
 						if(entry[j] == ''):
 							data[row[0]][entry[0]]= entry[1:j]
 							break
+					entry = next(reader)
 
 """
 	This provides a possibility of setting up simulations with ini configuration files.
@@ -77,7 +93,13 @@ def run_number():
 	in order to run simulations.
 """
 
+def relaxationRun():
+	return 0
+def productionRun():
+	return 0
+
 def simulate(lipids, bilayer):
+	print(bilayer)
 	args = ""#arguments passed for initial simulation
 	n = 0
 	descr = ""#description of types of lipids that will be used in command lines
@@ -100,29 +122,60 @@ def simulate(lipids, bilayer):
 			counts += str(bilayer[0][i] + str(bilayer[1][i])) + " "
 			n += 1
 		i += 1
-	args += "-pbc square -sol W -salt 0.15 -charge -56 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
+	args += "-pbc square -sol W -salt 0.15 -charge 0 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
 	args += "-asym " + str(bilayer[2])
 	descr += "W "
 	n += 1
 	run_num = "run" + str(run_number())
-	if 'relax' in run_type:
-		if platform.system() == 'Darwin' or platform.system() == 'macosx':
-			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
+	#call gromacs commands for simulations
+	os.system("mkdir {0}".format(run_num))
+	os.chdir(run_num)
+	os.system("echo {0} >description.txt".format(Utextnote))
+	os.system("echo {0} >> description.txt".format(Ltextnote))
+	os.system("echo {0} >> description.txt".format(Atextnote))
+	os.system("mkdir em")
+	os.chdir("em")
+	os.system("python2.7 ../../files/insane.py {0}".format(args))
+	os.system("cat ../../files/header.txt top.top > topol.top")
+	if platform.system() == 'Darwin' or platform.system() == 'macosx':	
+		os.system("sed -i ' ' '5d' topol.top") #for mac
+	else:		
+		os.system("sed -i '5d' topol.top") #for linux 
+	os.system("cp ../../files/martini_v2.x_new-rf.mdp ../em/")
+	if platform.system() == 'Darwin' or platform.system() == 'macosx':
+		os.system('sed -i " " "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][0]))
+		os.system('sed -i " " "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][1]))
+		os.system('sed -i " " "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][2]))
+	else:
+		os.system('sed -i "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][0]))
+		os.system('sed -i "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][1]))
+		os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][2]))
+	commands = '(echo del 1-200; echo "r W | r NA+ | r CL-"; echo name 1 Solvent; echo !1; echo name 2 Membrane; echo q) | gmx make_ndx -f bilayer.gro -o index.ndx'
+	subprocess.call (commands, shell = True)
+	os.system("gmx grompp -f martini_v2.x_new-rf.mdp -c bilayer.gro -p topol.top -n index.ndx -o em.tpr")
+	os.system("gmx mdrun -deffnm em -v -nt {0} -dlb yes".format(bilayer[3][3]))
+	os.chdir("..")
+	dirname = "em"
+	for i in range(len(bilayer)-4):
+		lastdir = dirname
+		dirname = str(int(float(bilayer[i+4][1])*1000)) + "fs"
+		os.system("mkdir {0}".format(dirname))#create a new directory named after the timestep of the simulation
+		os.system("cp {0}/{0}.gro {0}/topol.top {1}".format(lastdir, dirname))	
+		os.chdir(dirname)
+		os.system("cp ../../files/martini_v2.x_new-rf.mdp ../{0}/index.ndx ../{1}/".format(lastdir, dirname))
+		if platform.system() == 'Darwin' or platform.system() == 'macosx':	
+			os.system('sed -i " " "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][0]))
+			os.system('sed -i " " "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][1]))
+			os.system('sed -i " " "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][2]))
 		else:
-			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
-	elif '20fs' in run_type:
-		if platform.system() == 'Darwin' or platform.system() == 'macosx':
-			print(run_num)
-			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
-		else:
-			subprocess.call(["./20fs.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
-	else: #provides options for doing relaxation simulations, 20fs simulations or both.
-		if platform.system() == 'Darwin' or platform.system() == 'macosx':
-			subprocess.call(["./generate-mac.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
-			subprocess.call(["./20fs-mac.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
-		else:
-			subprocess.call(["./generate.sh", args, descr, str(n), str(bilayer[2]), counts, run_num, Utextnote, Ltextnote, Atextnote])
-			subprocess.call(["./20fs.sh", descr, counts, run_num, str(n), str(bilayer[3][0])])
+			os.system('sed -i "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][0]))
+			os.system('sed -i "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][1]))
+			os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][2]))
+		os.system("gmx grompp -f martini_v2.x_new-rf.mdp -c {0}.gro -p topol.top -n index.ndx -o {1}.tpr".format(lastdir, dirname))
+		os.system("gmx mdrun -deffnm {0} -v -nt {1} -dlb yes".format(dirname, bilayer[i+4][3]))
+		os.chdir("..")
+	os.chdir("..")
+
 """
 	In the main function we create a queue of simulations and run them through calling
 	simulate().
@@ -135,34 +188,35 @@ def main():
 		upper = value['upperLeaflet']
 		lower = value['lowerLeaflet']
 		asymmetry = value['asymmetry']
-		steps = value['steps']
+		NoS = len(value)-4 #the number of keys
 		total = 0.0
 		for i in upper:
 			total += float(i)
 		queue = []
-		if 'kc' in run_type and 'CHOL' in lipidtype: #check for when we want to keep the chlesterols
-			CHOLindex = lipidtype.index('CHOL')
-			CHOL = upper[CHOLindex]
-			for asym in asymmetry:
-				percentage = 1 - float(asym)/(total-int(CHOL))
-				upper1 = []
-				for i in range(len(upper)):
-					if i == CHOLindex:
-						upper1.append(str(upper[i]))
-					else:
-						upper1.append(str(int(round(float(upper[i])*(percentage)))))
-				queue.append([upper1, lower, asym, steps])
-		else:
-			for asym in asymmetry:
-				percentage = 1 - float(asym)/total
-				upper1 = []
-				for i in range(len(upper)):
-					upper1.append(str(int(round(float(upper[i])*(percentage)))))
-				queue.append([upper1, lower, asym, steps])
+		for asym in asymmetry:
+			percentage = 1 - float(asym)/total
+			upper1 = []
+			for i in range(len(upper)):
+				upper1.append(str(int(round(float(upper[i])*(percentage)))))
+			simulation = [upper1, lower, asym]
+			for i in range(NoS):
+				simulation.append(value['sim{0}'.format(i)])
+			queue.append(simulation)
+		print(queue)
+		attempts = 0
 		while len(queue) > 0:
 			e = queue.pop(0)
 			for j in range(3):
 				simulate(lipidtype, e)
+			dirname = str(int(float(e[-1][1])*1000)) + "fs"
+			currentfile = "run{0}/{1}/{1}.xtc".format(next_run-1, dirname)
+			if not(os.path.isfile(currentfile)): 
+				if attempts < maxAttempt:
+					queue.reverse()
+					queue.append(e)
+					queue.reverse()
+					attempts += 1
+				else:
+					attempts = 0
 
 main()
-
