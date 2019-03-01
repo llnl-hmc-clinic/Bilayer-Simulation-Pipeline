@@ -1,4 +1,4 @@
-	Weclome to the usage of our lipid bilayer simulation script! 
+	Welcome to the usage of our lipid bilayer simulation script! 
 
 This script serves the purpose of doing multiple simulations in one run with simplified commands. Also, you can do analysis of lipid bilayer properties with our script.
 
