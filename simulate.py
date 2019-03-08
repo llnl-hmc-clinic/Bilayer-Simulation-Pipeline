@@ -1,6 +1,7 @@
 """
 file:    generate.py
 date:    2018 November 10
+author:  HMC-LLNL-Clinic-Team
 purpose: This program will serve the purpose of creating simulations of energy
 		 minimization, 1fs, 5fs, and 15fs time step to relax the simulated lipid
 		 bilayer for a 25fs or larger timestep simulations.
@@ -182,7 +183,17 @@ def simulate(lipids, bilayer):
 """
 
 def main():
+	global next_run
 	importcsv(csvConfig)
+	existing = []
+	for x in os.listdir('.'):
+		m = re.search('run(\d+).*', x)
+		if m:
+			existing.append(int(m.group(1)))
+	if existing:
+		next_run = 1 + max(existing)
+	else:
+		next_run = 0
 	for key, value in data.items():
 		lipidtype = value['lipid type']
 		upper = value['upperLeaflet']
@@ -202,21 +213,18 @@ def main():
 			for i in range(NoS):
 				simulation.append(value['sim{0}'.format(i)])
 			queue.append(simulation)
-		print(queue)
-		attempts = 0
 		while len(queue) > 0:
 			e = queue.pop(0)
 			for j in range(3):
+				attempts = 0
 				simulate(lipidtype, e)
-			dirname = str(int(float(e[-1][1])*1000)) + "fs"
-			currentfile = "run{0}/{1}/{1}.xtc".format(next_run-1, dirname)
-			if not(os.path.isfile(currentfile)): 
-				if attempts < maxAttempt:
-					queue.reverse()
-					queue.append(e)
-					queue.reverse()
+				dirname = str(int(float(e[-1][1])*1000)) + "fs"
+				currentfile = "run{0}/{1}/{1}.xtc".format(next_run-1, dirname)
+				while (not(os.path.isfile(currentfile)) and attempts < 4):
+					next_run -= 1
+					simulate(lipidtype, e)
 					attempts += 1
-				else:
+				if (attempts == 4):
 					attempts = 0
 
 main()
