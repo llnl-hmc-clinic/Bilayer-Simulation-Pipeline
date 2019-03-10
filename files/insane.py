@@ -1385,10 +1385,6 @@ if lipL:
           num_up[j] -= 1
           break
 
-    numCharge = int(-1 * num_up[5] + -5 * num_up[6])
-    options["-charge"].value = str(numCharge)
-
-
     lip_up     = [l for i,l in zip(num_up,lipU) for j in range(i)]
     leaf_up    = ( 1,zip(lip_up,upper),up_lipdx,up_lipdy)
     
@@ -1461,6 +1457,9 @@ for j in protein.atoms:
 #pcharge = sum([charges.get(i[0].strip(),0) for i in set([j[1:3] for j in protein.atoms if not j[0].strip().startswith('v')])])
 
 charge  = mcharge + pcharge
+
+options["-charge"].value = str(charge) #setting the total charge to 0.
+
 plen, mlen, slen = 0, 0, 0
 plen = protein and len(protein) or 0
 #print >>sys.stderr, "; NDX Solute %d %d" % (1, protein and plen or 0)

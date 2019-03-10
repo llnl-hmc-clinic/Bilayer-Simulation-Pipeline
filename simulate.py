@@ -20,7 +20,7 @@ purpose: This program will serve the purpose of creating simulations of energy
          form.
 """
 
-import sys,re,os,math, csv,random,subprocess,configparser,multiprocessing,tempfile,datetime, platform
+import sys,re,os,math, csv,random,subprocess,configparser,multiprocessing,tempfile,datetime, platform, analysis
 import numpy as np
 
 csvConfig = "./configurations.csv"#this is the input file in csv format
@@ -32,8 +32,8 @@ run_type = sys.argv #this is the system arguments that either includes a run-typ
 maxAttempt = 3
 
 
-""" importcsv imports a csv file that has specs for simulations and convert it 
-	to a dictionary.
+""" isLast function is the function that checks whether this entry is the last 
+	entry. If it is, it returns true as well as the last entry.
 """
 
 def isLast(itr):
@@ -42,6 +42,10 @@ def isLast(itr):
     yield False, old
     old = new
   yield True, old
+
+""" importcsv imports a csv file that has specs for simulations and convert it 
+	to a dictionary.
+"""
 
 def importcsv(csvfile):
 	with open(csvfile, 'r') as fin:
@@ -67,20 +71,8 @@ def importcsv(csvfile):
 					entry = next(reader)
 
 """
-	This provides a possibility of setting up simulations with ini configuration files.
-"""
-
-def importini(inifile):
-	config = configparser.ConfigParser()
-	config.read("inifile")
-	for sec in config.sections(): #iterate through each simulation configuration
-		for key, value in config.items(sec):
-			data[sec] = {key: value.split(', ')}
-	return data
-
-"""
-    A helper function that keeps track of the number of runs. It returns the
-    index of the current run.
+	A helper function that keeps track of the number of runs. It returns the
+	index of the current run and make changes to the global variable of next_run.
 """
 def run_number():
 	global next_run
@@ -89,18 +81,17 @@ def run_number():
 	print(f"Set next_run to {next_run}")
 	return n
 
-"""
-	Simulate is the function that produces and call commandlines from simulate.sh
-	in order to run simulations.
-"""
-
 def relaxationRun():
 	return 0
 def productionRun():
 	return 0
 
+"""
+	Simulate is the function that call bash commands to manage the file 
+	system and do gromacs simulations.
+"""
+
 def simulate(lipids, bilayer):
-	print(bilayer)
 	args = ""#arguments passed for initial simulation
 	n = 0
 	descr = ""#description of types of lipids that will be used in command lines
@@ -123,11 +114,12 @@ def simulate(lipids, bilayer):
 			counts += str(bilayer[0][i] + str(bilayer[1][i])) + " "
 			n += 1
 		i += 1
-	args += "-pbc square -sol W -salt 0.15 -charge 0 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
-	args += "-asym " + str(bilayer[2])
 	descr += "W "
+	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
+	args += "-asym " + str(bilayer[2])
 	n += 1
 	run_num = "run" + str(run_number())
+
 	#call gromacs commands for simulations
 	os.system("mkdir {0}".format(run_num))
 	os.chdir(run_num)
@@ -208,14 +200,15 @@ def main():
 			percentage = 1 - float(asym)/total
 			upper1 = []
 			for i in range(len(upper)):
+				#upper1 is an the upper leaflet that has been calculated with asymmetry
 				upper1.append(str(int(round(float(upper[i])*(percentage)))))
-			simulation = [upper1, lower, asym]
+			simulation = [upper, lower, asym]
 			for i in range(NoS):
 				simulation.append(value['sim{0}'.format(i)])
 			queue.append(simulation)
 		while len(queue) > 0:
 			e = queue.pop(0)
-			for j in range(3):
+			for j in range(1):
 				attempts = 0
 				simulate(lipidtype, e)
 				dirname = str(int(float(e[-1][1])*1000)) + "fs"
