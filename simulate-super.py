@@ -120,6 +120,41 @@ def simulate(lipids, bilayer):
 	n += 1
 	run_num = "run" + str(run_number())
 
+	#The following is the code for supercomputer
+	os.system("#!/bin/bash")
+	os.system("#SBATCH -J HM_init")
+	os.system("#SBATCH -A bbs")
+	os.system("#SBATCH -N 1")
+	os.system("#SBATCH -t 16:00:00")
+	os.system("#SBATCH -p pbatch")
+	os.system("#SBATCH --export=ALL")
+
+	os.system("echo 'Job start running'")
+
+	os.system("# pbatch - pdebug")
+	os.system("# 16:00:00 - 0.1 - 16")
+
+	os.system("source '/p/lustre1/muntere/gromacs-5.1.4/bin/gmx'")
+
+	# Set minimum job run time (in min) - 
+	# if job length less than $MINIMUMTIME don't continue next job
+	os.system("MINIMUMTIME=$(echo '5*60*1' | bc)")
+	os.system("echo 'Run job {0}'".format(next_run-1))
+
+	# Set working directory
+	os.system("echo 'The jobs are ran here:'")
+	os.system("pwd")
+	os.system("export GROMACS_HOME=/p/lustre1/muntere/gromacs-5.1.4")
+	os.system("export gromacs='${GROMACS_HOME}/bin/gmx_mpi mdrun'")
+	os.system("source $GROMACS_HOME/bin/GMXRC.bash")
+	os.system("export OMP_NUM_THREADS=1")
+	os.system("export CORS_PER_NODE=8")
+	os.system("num_nodes=1")
+	os.system("num_progs=$(($num_nodes * $CORS_PER_NODE))")
+	os.system("echo 'Running job $SLURM_JOB_ID with #nodes $num_nodes and #prog $num_progs maxrun $maxrun'")
+
+	os.system("echo 'Running jobs {0}'".format(next_run-1))
+
 	#call gromacs commands for simulations
 	os.system("mkdir {0}".format(run_num))
 	os.chdir(run_num)
@@ -168,6 +203,7 @@ def simulate(lipids, bilayer):
 		os.system("gmx mdrun -deffnm {0} -v -nt {1} -dlb yes".format(dirname, bilayer[i+4][3]))
 		os.chdir("..")
 	os.chdir("..")
+	os.system("wait")
 
 """
 	In the main function we create a queue of simulations and run them through calling
