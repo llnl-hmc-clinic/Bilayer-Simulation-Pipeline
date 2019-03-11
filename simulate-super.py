@@ -20,7 +20,7 @@ purpose: This program will serve the purpose of creating simulations of energy
          form.
 """
 
-import sys,re,os,math, csv,random,subprocess,configparser,multiprocessing,tempfile,datetime, platform, analysis
+import sys,re,os,math, csv,random,subprocess,configparser,multiprocessing,tempfile,datetime, platform
 import numpy as np
 
 csvConfig = "./configurations.csv"#this is the input file in csv format
