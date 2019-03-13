@@ -119,6 +119,8 @@ def simulate(lipids, bilayer):
 	args += "-asym " + str(bilayer[2])
 	n += 1
 	run_num = "run" + str(run_number())
+	tout = open(f'{run_num}.out', 'w')
+	terr = open(f'{run_num}.err', 'w')
 
 	#The following is the code for supercomputer
 	os.system("#!/bin/bash")
