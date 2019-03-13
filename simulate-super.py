@@ -163,7 +163,8 @@ def simulate(lipids, bilayer):
 	os.system("echo {0} >> description.txt".format(Atextnote))
 	os.system("mkdir em")
 	os.chdir("em")
-	os.system("python2.7 ../../files/insane.py {0}".format(args))
+	commands = "python2.7 ../../files/insane.py {0}".format(args)
+	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	os.system("cat ../../files/header.txt top.top > topol.top")
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':	
 		os.system("sed -i ' ' '5d' topol.top") #for mac
@@ -179,9 +180,11 @@ def simulate(lipids, bilayer):
 		os.system('sed -i "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][1]))
 		os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][2]))
 	commands = '(echo del 1-200; echo "r W | r NA+ | r CL-"; echo name 1 Solvent; echo !1; echo name 2 Membrane; echo q) | gmx make_ndx -f bilayer.gro -o index.ndx'
-	subprocess.call (commands, shell = True)
-	os.system("gmx grompp -f martini_v2.x_new-rf.mdp -c bilayer.gro -p topol.top -n index.ndx -o em.tpr")
-	os.system("gmx mdrun -deffnm em -v -nt {0} -dlb yes".format(bilayer[3][3]))
+	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+	commands = "gmx grompp -f martini_v2.x_new-rf.mdp -c bilayer.gro -p topol.top -n index.ndx -o em.tpr"
+	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+	commands = "gmx mdrun -deffnm em -v -nt {0} -dlb yes".format(bilayer[3][3])
+	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	os.chdir("..")
 	dirname = "em"
 	for i in range(len(bilayer)-4):
@@ -199,8 +202,10 @@ def simulate(lipids, bilayer):
 			os.system('sed -i "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][0]))
 			os.system('sed -i "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][1]))
 			os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][2]))
-		os.system("gmx grompp -f martini_v2.x_new-rf.mdp -c {0}.gro -p topol.top -n index.ndx -o {1}.tpr".format(lastdir, dirname))
-		os.system("gmx mdrun -deffnm {0} -v -nt {1} -dlb yes".format(dirname, bilayer[i+4][3]))
+		commands = "gmx grompp -f martini_v2.x_new-rf.mdp -c {0}.gro -p topol.top -n index.ndx -o {1}.tpr".format(lastdir, dirname)
+		subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+		commands = "gmx mdrun -deffnm {0} -v -nt {1} -dlb yes".format(dirname, bilayer[i+4][3])
+		subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 		os.chdir("..")
 	os.chdir("..")
 	os.system("wait")
