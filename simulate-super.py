@@ -256,6 +256,8 @@ def main():
 				if (attempts == 4):
 					attempts = 0
 				run_num = "run" + str(next_run - 1)
+				os.system("gmx make_ndx -f lipids-water.gro -o index.ndx  < ../index-selection.txt")
+				os.system("gmx trjconv -f 20fs.xtc -o 20fs-center.xtc -center -pbc mol -s 20fs.tpr -n index.ndx")
 				os.system("python3 analysis.py {0}".format(run_num))
 
 main()
