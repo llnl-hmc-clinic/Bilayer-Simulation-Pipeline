@@ -91,7 +91,7 @@ def productionRun():
 	system and do gromacs simulations.
 """
 
-def simulate(lipids, bilayer):
+def simulate(lipids, bilayer,run_num):
 	args = ""#arguments passed for initial simulation
 	n = 0
 	descr = ""#description of types of lipids that will be used in command lines
@@ -118,59 +118,33 @@ def simulate(lipids, bilayer):
 	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
 	args += "-asym " + str(bilayer[2])
 	n += 1
-	run_num = "run" + str(run_number())
-	tout = open(f'{run_num}.out', 'w')
-	terr = open(f'{run_num}.err', 'w')
-
-	#The following is the code for supercomputer
-	os.system("#!/bin/bash")
-	os.system("#SBATCH -J HM_init")
-	os.system("#SBATCH -A bbs")
-	os.system("#SBATCH -N 1")
-	os.system("#SBATCH -t 16:00:00")
-	os.system("#SBATCH -p pbatch")
-	os.system("#SBATCH --export=ALL")
-
-	os.system("echo 'Job start running'")
-
-	os.system("# pbatch - pdebug")
-	os.system("# 16:00:00 - 0.1 - 16")
-
-	os.system("source '/p/lustre1/muntere/gromacs-5.1.4/bin/gmx'")
-
-	# Set minimum job run time (in min) - 
-	# if job length less than $MINIMUMTIME don't continue next job
-	os.system("MINIMUMTIME=$(echo '5*60*1' | bc)")
-	os.system("echo 'Run job {0}'".format(next_run-1))
-
-	# Set working directory
-	os.system("echo 'The jobs are ran here:'")
-	os.system("pwd")
-	os.system("export GROMACS_HOME=/p/lustre1/muntere/gromacs-5.1.4")
-	os.system("export gromacs='${GROMACS_HOME}/bin/gmx_mpi mdrun'")
-	os.system("source $GROMACS_HOME/bin/GMXRC.bash")
-	os.system("export OMP_NUM_THREADS=1")
-	os.system("export CORS_PER_NODE=8")
-	os.system("num_nodes=1")
-	os.system("num_progs=$(($num_nodes * $CORS_PER_NODE))")
-	os.system("echo 'Running job $SLURM_JOB_ID with #nodes $num_nodes and #prog $num_progs maxrun $maxrun'")
-
-	os.system("echo 'Running jobs {0}'".format(next_run-1))
-
 	#call gromacs commands for simulations
+	print("{0} starts".format(run_num))
 	os.system("mkdir {0}".format(run_num))
 	os.chdir(run_num)
+	tout = open('{0}.out'.format(run_num), 'w')
+	terr = open('{0}.err'.format(run_num), 'w')
+	tlog = open('{0}.log'.format(run_num), 'w')
+	tlog.write("{0} starts\n".format(run_num))
 	os.system("echo {0} >description.txt".format(Utextnote))
 	os.system("echo {0} >> description.txt".format(Ltextnote))
 	os.system("echo {0} >> description.txt".format(Atextnote))
 	os.system("mkdir em")
 	os.chdir("em")
+	print("Start inserting membrane")
+	tlog.write("Start inserting membrane\n")
 	commands = "python2.7 ../../files/insane.py {0}".format(args)
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+	if os.path.isfile("bilayer.gro"): 
+		print("membrane inserted")
+		tlog.write("membrane inserted\n")
+	else:
+		print("membrane insertion failed")
+		tlog.write("membrane inserted\n")
 	os.system("cat ../../files/header.txt top.top > topol.top")
-	if platform.system() == 'Darwin' or platform.system() == 'macosx':	
+	if platform.system() == 'Darwin' or platform.system() == 'macosx':
 		os.system("sed -i ' ' '5d' topol.top") #for mac
-	else:		
+	else:
 		os.system("sed -i '5d' topol.top") #for linux 
 	os.system("cp ../../files/martini_v2.x_new-rf.mdp ../em/")
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':
@@ -181,14 +155,23 @@ def simulate(lipids, bilayer):
 		os.system('sed -i "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][0]))
 		os.system('sed -i "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][1]))
 		os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][2]))
+	print("start energy minimization")
+	tlog.write("start energy minimization\n")
 	commands = '(echo del 1-200; echo "r W | r NA+ | r CL-"; echo name 1 Solvent; echo !1; echo name 2 Membrane; echo q) | gmx make_ndx -f bilayer.gro -o index.ndx'
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	commands = "gmx grompp -f martini_v2.x_new-rf.mdp -c bilayer.gro -p topol.top -n index.ndx -o em.tpr"
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	commands = "gmx mdrun -deffnm em -v -nt {0} -dlb yes".format(bilayer[3][3])
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+	if os.path.isfile("em.gro"): 
+		print("energy minimization finished")
+		tlog.write("energy minimization finished\n")
+	else: 
+		print("energy minimization failed")
+		tlog.write("energy minimization failed\n")
 	os.chdir("..")
 	dirname = "em"
+#the relaxation runs
 	for i in range(len(bilayer)-4):
 		lastdir = dirname
 		dirname = str(int(float(bilayer[i+4][1])*1000)) + "fs"
@@ -204,14 +187,31 @@ def simulate(lipids, bilayer):
 			os.system('sed -i "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][0]))
 			os.system('sed -i "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][1]))
 			os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][2]))
+		print("{0} simulation starts".format(dirname))
+		tlog.write("{0} simulation starts\n".format(dirname))
 		commands = "gmx grompp -f martini_v2.x_new-rf.mdp -c {0}.gro -p topol.top -n index.ndx -o {1}.tpr".format(lastdir, dirname)
 		subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 		commands = "gmx mdrun -deffnm {0} -v -nt {1} -dlb yes".format(dirname, bilayer[i+4][3])
 		subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+		if(os.path.isfile("{0}.gro".format(dirname))): 
+			print("{0} simulation finished".format(dirname))
+			tlog.write("{0} simulation finished\n".format(dirname))
+		else: 
+			print("{0} simulation failed".format(dirname))
+			tlog.write("{0} simulation failed\n".format(dirname))
 		os.chdir("..")
+	os.system("rm -r em")
+	os.system("rm -r 1fs")
+	os.system("rm -r 5fs")
+	os.system("rm -r 15fs")
 	os.chdir("..")
-	os.system("wait")
-
+	dirname = str(int(float(bilayer[-1][1])*1000)) + "fs"
+	currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
+	if (not(os.path.isfile(currentfile))):
+		os.system("rm -r {0}".format(run_num))
+		simulate(lipids, bilayer,run_num)
+	else:
+		os.system("sbatch 20fs.sh 5 {0}/20fs".format(run_num))
 """
 	In the main function we create a queue of simulations and run them through calling
 	simulate().
@@ -220,15 +220,6 @@ def simulate(lipids, bilayer):
 def main():
 	global next_run
 	importcsv(csvConfig)
-	existing = []
-	for x in os.listdir('.'):
-		m = re.search('run(\d+).*', x)
-		if m:
-			existing.append(int(m.group(1)))
-	if existing:
-		next_run = 1 + max(existing)
-	else:
-		next_run = 0
 	for key, value in data.items():
 		lipidtype = value['lipid type']
 		upper = value['upperLeaflet']
@@ -249,22 +240,71 @@ def main():
 			for i in range(NoS):
 				simulation.append(value['sim{0}'.format(i)])
 			queue.append(simulation)
-		while len(queue) > 0:
-			e = queue.pop(0)
-			for j in range(3):
-				attempts = 0
-				simulate(lipidtype, e)
-				dirname = str(int(float(e[-1][1])*1000)) + "fs"
-				currentfile = "run{0}/{1}/{1}.xtc".format(next_run-1, dirname)
-				while (not(os.path.isfile(currentfile)) and attempts < 4):
-					next_run -= 1
-					simulate(lipidtype, e)
-					attempts += 1
-				if (attempts == 4):
-					attempts = 0
-				run_num = "run" + str(next_run - 1)
-				os.system("gmx make_ndx -f lipids-water.gro -o index.ndx  < ../index-selection.txt")
-				os.system("gmx trjconv -f 20fs.xtc -o 20fs-center.xtc -center -pbc mol -s 20fs.tpr -n index.ndx")
-				os.system("python3 analysis.py {0}".format(run_num))
 
+	ps = []
+#	newQueue = []
+	n = 0
+#	check for the current folders and start new runs from those
+	existing = []
+	for x in os.listdir('.'):
+		m = re.search('run(\d+).*', x)
+		if m:
+			existing.append(int(m.group(1)))
+	if existing:
+		n = max(existing)
+	else:
+		n = 0
+	while len(queue) > 0:
+		e = queue.pop(0)
+		for j in range(3):
+			run_num = "run" + str(n)
+			print(run_num)			
+			p = multiprocessing.Process(target=simulate, args=(lipidtype, e, run_num))
+			ps.append(p)
+			p.start()
+#			newQueue.append(e)
+			n += 1
+	for p in ps:
+		p.join()
+"""
+	n = 0
+	newNewQueue = []
+	while len(newQueue) > 0:
+		e = newQueue.pop(0)
+		dirname = str(int(float(e[-1][1])*1000)) + "fs"
+		currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
+		run_num = "run" + str(n)
+		print(run_num)			
+		if (not(os.path.isfile(currentfile))):
+			p = multiprocessing.Process(target=simulate, args=(lipidtype, e, run_num))
+			ps.append(p)
+			p.start()
+		newNewQueue.append(e)
+	for p in ps:
+		p.join()
+	n = 0
+	while len(newNewQueue) > 0:
+		e = newNewQueue.pop(0)
+		dirname = str(int(float(e[-1][1])*1000)) + "fs"
+		currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
+		run_num = "run" + str(n)
+		print(run_num)			
+		if (not(os.path.isfile(currentfile))):
+			p = multiprocessing.Process(target=simulate, args=(lipidtype, e, run_num))
+			ps.append(p)
+			p.start()
+	for p in ps:
+		p.join()
+	existing = []
+	for x in os.listdir('.'):
+		m = re.search('run(\d+).*', x)
+		if m:
+			existing.append(int(m.group(1)))
+	if existing:
+		next_run = max(existing)
+	else:
+		next_run = 0
+	for i in range(next_run):
+		os.system("python3 analysis.py {0}".format(run_num))
+"""
 main()

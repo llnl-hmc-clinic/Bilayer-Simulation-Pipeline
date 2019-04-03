@@ -230,9 +230,20 @@ def main():
 			for i in range(NoS):
 				simulation.append(value['sim{0}'.format(i)])
 			queue.append(simulation)
+	#restart simulations that were not finished
 	ps = []
 	newQueue = []
 	n = 0
+#	check for the current folders and start new runs from those
+	existing = []
+	for x in os.listdir('.'):
+		m = re.search('run(\d+).*', x)
+		if m:
+			existing.append(int(m.group(1)))
+	if existing:
+		n = max(existing)
+	else:
+		n = 0
 	while len(queue) > 0:
 		e = queue.pop(0)
 		for j in range(3):
@@ -245,7 +256,10 @@ def main():
 			n += 1
 	for p in ps:
 		p.join()
-	n = 0
+	if existing:
+		n = max(existing)
+	else:
+		n = 0
 	newNewQueue = []
 	while len(newQueue) > 0:
 		e = newQueue.pop(0)
@@ -260,7 +274,10 @@ def main():
 		newNewQueue.append(e)
 	for p in ps:
 		p.join()
-	n = 0
+	if existing:
+		n = max(existing)
+	else:
+		n = 0
 	while len(newNewQueue) > 0:
 		e = newNewQueue.pop(0)
 		dirname = str(int(float(e[-1][1])*1000)) + "fs"
