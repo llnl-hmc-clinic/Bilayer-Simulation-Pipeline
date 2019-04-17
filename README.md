@@ -38,4 +38,3 @@ To use our script, you need to:
 	> $ python3 simulate-super.py
 
 4. Wait until our script finish simulations and analysis of bilayer properties!
-Our pipeline is for simulations from energy minimization to your production run.
