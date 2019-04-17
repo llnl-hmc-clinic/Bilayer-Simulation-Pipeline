@@ -28,19 +28,13 @@ To use our script, you need to:
     * Please strictly follow the format for the configuration file: you can add configuration for more simulations, but each simulation configuration should be uniform
 
 3. To do simulations:
-	If you have no need for multiprocessing, run 
-	'''
-	$ python3 simulate.py
-	'''
+	* If you have no need for multiprocessing, run 
+	> $ python3 simulate.py
 
-	If you are multiprocessing the simulations, run
-	'''
-	$ python3 simulate-multi.py
-	'''
+	* If you are multiprocessing the simulations, run
+	> $ python3 simulate-multi.py
 
-	If you are multiprocessing on sbatch, run
-	'''
-	$ python3 simulate-super.py
-	'''
-	
+	* If you are multiprocessing on sbatch, run
+	> $ python3 simulate-super.py
+
 Our pipeline is for simulations from energy minimization to your production run.
