@@ -194,22 +194,14 @@ def main():
 		next_run = 1 + max(existing)
 	else:
 		next_run = 0
+	queue = []
 	for key, value in data.items():
 		lipidtype = value['lipid type']
 		upper = value['upperLeaflet']
 		lower = value['lowerLeaflet']
 		asymmetry = value['asymmetry']
 		NoS = len(value)-4 #the number of keys
-		total = 0.0
-		for i in upper:
-			total += float(i)
-		queue = []
 		for asym in asymmetry:
-			percentage = 1 - float(asym)/total
-			upper1 = []
-			for i in range(len(upper)):
-				#upper1 is an the upper leaflet that has been calculated with asymmetry
-				upper1.append(str(int(round(float(upper[i])*(percentage)))))
 			simulation = [upper, lower, asym]
 			for i in range(NoS):
 				simulation.append(value['sim{0}'.format(i)])

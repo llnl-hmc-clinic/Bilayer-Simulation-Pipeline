@@ -26,7 +26,7 @@ import numpy as np
 csvConfig = "./configurations.csv"#this is the input file in csv format
 iniConfig = './configurations.ini'#this is the input file in ini format
 data = {} #this collects the simulation parameters from the configuration file
-next_run = 0#this keeps track of the number of runs we are doing
+initial_run = 0#this keeps track of the number of runs we are starting from
 SYSTEM_SIZE = ["12", "12", "10"]#this is the system size of the simulation
 run_type = sys.argv #this is the system arguments that either includes a run-type or not
 maxAttempt = 3
@@ -81,11 +81,6 @@ def run_number():
 	print(f"Set next_run to {next_run}")
 	return n
 
-def relaxationRun():
-	return 0
-def productionRun():
-	return 0
-
 """
 	Simulate is the function that call bash commands to manage the file 
 	system and do gromacs simulations.
@@ -119,7 +114,7 @@ def simulate(lipids, bilayer,run_num):
 	args += "-asym " + str(bilayer[2])
 	n += 1
 
-	#call gromacs commands for simulations
+	#call gromacs commands for energy minimization
 	print("{0} starts".format(run_num))
 	os.system("mkdir {0}".format(run_num))
 	os.chdir(run_num)
@@ -132,15 +127,15 @@ def simulate(lipids, bilayer,run_num):
 	os.system("echo {0} >> description.txt".format(Atextnote))
 	os.system("mkdir em")
 	os.chdir("em")
-	print("Start inserting membrane")
-	tlog.write("Start inserting membrane\n")
+	print("Start inserting membrane for {0}".format(run_num))
+	tlog.write("Start inserting membrane for {0}\n".format(run_num))
 	commands = "python2.7 ../../files/insane.py {0}".format(args)
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	if os.path.isfile("bilayer.gro"): 
-		print("membrane inserted")
+		print("membrane inserted for {0}".format(run_num))
 		tlog.write("membrane inserted\n")
 	else:
-		print("membrane insertion failed")
+		print("membrane insertion failed for {0}".format(run_num))
 		tlog.write("membrane inserted\n")
 	os.system("cat ../../files/header.txt top.top > topol.top")
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':
@@ -156,7 +151,7 @@ def simulate(lipids, bilayer,run_num):
 		os.system('sed -i "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][0]))
 		os.system('sed -i "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][1]))
 		os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][2]))
-	print("start energy minimization")
+	print("start energy minimization for {0}".format(run_num))
 	tlog.write("start energy minimization\n")
 	commands = '(echo del 1-200; echo "r W | r NA+ | r CL-"; echo name 1 Solvent; echo !1; echo name 2 Membrane; echo q) | gmx make_ndx -f bilayer.gro -o index.ndx'
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
@@ -165,13 +160,14 @@ def simulate(lipids, bilayer,run_num):
 	commands = "gmx mdrun -deffnm em -v -nt {0} -dlb yes".format(bilayer[3][3])
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	if os.path.isfile("em.gro"): 
-		print("energy minimization finished")
+		print("energy minimization finished for {0}".format(run_num))
 		tlog.write("energy minimization finished\n")
 	else: 
-		print("energy minimization failed")
+		print("energy minimization failed for {0}".format(run_num))
 		tlog.write("energy minimization failed\n")
 	os.chdir("..")
 	dirname = "em"
+	#call gromacs commands for the simulations following the energy minimization
 	for i in range(len(bilayer)-4):
 		lastdir = dirname
 		dirname = str(int(float(bilayer[i+4][1])*1000)) + "fs"
@@ -187,68 +183,62 @@ def simulate(lipids, bilayer,run_num):
 			os.system('sed -i "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][0]))
 			os.system('sed -i "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][1]))
 			os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][2]))
-		print("{0} simulation starts".format(dirname))
-		tlog.write("{0} simulation starts\n".format(dirname))
+		print("{0} simulation starts for {1}".format(dirname, run_num))
+		tlog.write("{0} simulation starts for {1}\n".format(dirname, run_num))
 		commands = "gmx grompp -f martini_v2.x_new-rf.mdp -c {0}.gro -p topol.top -n index.ndx -o {1}.tpr".format(lastdir, dirname)
 		subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 		commands = "gmx mdrun -deffnm {0} -v -nt {1} -dlb yes".format(dirname, bilayer[i+4][3])
 		subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 		if(os.path.isfile("{0}.gro".format(dirname))): 
-			print("{0} simulation finished".format(dirname))
-			tlog.write("{0} simulation finished\n".format(dirname))
+			print("{0} simulation finished for {1}".format(dirname, run_num))
+			tlog.write("{0} simulation finished for {1}\n".format(dirname, run_num))
 		else: 
-			print("{0} simulation failed".format(dirname))
-			tlog.write("{0} simulation failed\n".format(dirname))
+			print("{0} simulation failed for {1}".format(dirname, run_num))
+			tlog.write("{0} simulation failed for {1}\n".format(dirname, run_num))
 		os.chdir("..")
 	os.chdir("..")
 
 """
-	In the main function we create a queue of simulations and run them through calling
-	simulate().
+	In the main function we create a queue of simulations and run them in parallel through 
+	multithreading on simulate().
 """
 
 def main():
-	global next_run
+	global initial_run	
 	importcsv(csvConfig)
+	queue = []
+	#add the simulations into a queue
 	for key, value in data.items():
 		lipidtype = value['lipid type']
 		upper = value['upperLeaflet']
 		lower = value['lowerLeaflet']
 		asymmetry = value['asymmetry']
 		NoS = len(value)-4 #the number of keys
-		total = 0.0
-		for i in upper:
-			total += float(i)
-		queue = []
 		for asym in asymmetry:
-			percentage = 1 - float(asym)/total
-			upper1 = []
-			for i in range(len(upper)):
-				#upper1 is an the upper leaflet that has been calculated with asymmetry
-				upper1.append(str(int(round(float(upper[i])*(percentage)))))
 			simulation = [upper, lower, asym]
 			for i in range(NoS):
 				simulation.append(value['sim{0}'.format(i)])
 			queue.append(simulation)
-	#restart simulations that were not finished
 	ps = []
 	newQueue = []
 	n = 0
-#	check for the current folders and start new runs from those
+	#check for the current folders and start new runs following those folders
 	existing = []
 	for x in os.listdir('.'):
 		m = re.search('run(\d+).*', x)
 		if m:
 			existing.append(int(m.group(1)))
 	if existing:
-		n = max(existing)
+		initial_run = max(existing) + 1
+		n = max(existing) + 1
 	else:
+		initial_run = 0
 		n = 0
+	#start the simulations from the queue
 	while len(queue) > 0:
 		e = queue.pop(0)
 		for j in range(3):
 			run_num = "run" + str(n)
-			print(run_num)			
 			p = multiprocessing.Process(target=simulate, args=(lipidtype, e, run_num))
 			ps.append(p)
 			p.start()
@@ -256,17 +246,14 @@ def main():
 			n += 1
 	for p in ps:
 		p.join()
-	if existing:
-		n = max(existing)
-	else:
-		n = 0
+	#restart simulations that were not finished
 	newNewQueue = []
+	n = initial_run
 	while len(newQueue) > 0:
 		e = newQueue.pop(0)
 		dirname = str(int(float(e[-1][1])*1000)) + "fs"
 		currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
 		run_num = "run" + str(n)
-		print(run_num)			
 		if (not(os.path.isfile(currentfile))):
 			p = multiprocessing.Process(target=simulate, args=(lipidtype, e, run_num))
 			ps.append(p)
@@ -274,10 +261,8 @@ def main():
 		newNewQueue.append(e)
 	for p in ps:
 		p.join()
-	if existing:
-		n = max(existing)
-	else:
-		n = 0
+	n = initial_run
+	#check again for the unfinished simulations and restart them
 	while len(newNewQueue) > 0:
 		e = newNewQueue.pop(0)
 		dirname = str(int(float(e[-1][1])*1000)) + "fs"
@@ -290,6 +275,7 @@ def main():
 			p.start()
 	for p in ps:
 		p.join()
+	#Get the number of folders after our simulations
 	existing = []
 	for x in os.listdir('.'):
 		m = re.search('run(\d+).*', x)
@@ -299,7 +285,9 @@ def main():
 		next_run = max(existing)
 	else:
 		next_run = 0
-	for i in range(next_run):
+	#do analysis for our simulations
+	for i in range(next_run - initial_run):
+		run_num = "run{0}".format(initial_run + i)
 		os.system("python3 analysis.py {0}".format(run_num))
 
 main()
