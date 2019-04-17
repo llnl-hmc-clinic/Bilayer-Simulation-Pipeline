@@ -18,7 +18,7 @@ http://fatslim.github.io/
 
 To use our script, you need to:
 
-1. Activate GROMACS if necessary: usually this line of command works:
+1. Source GROMACS if necessary: usually this line of command works:
 	$source /usr/local/gromacs/bin/GMXRC
 
 2. To set up your simulation configuration, you can choose one of the following methods:
@@ -37,4 +37,5 @@ To use our script, you need to:
 	* If you are multiprocessing on sbatch, run
 	> $ python3 simulate-super.py
 
+4. Wait until our script finish simulations and analysis of bilayer properties!
 Our pipeline is for simulations from energy minimization to your production run.
