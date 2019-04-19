@@ -19,7 +19,7 @@ http://fatslim.github.io/
 To use our script, you need to:
 
 1. Source GROMACS if necessary: usually this line of command works:
-	$source /usr/local/gromacs/bin/GMXRC
+	> $ source /usr/local/gromacs/bin/GMXRC
 
 2. To set up your simulation configuration, you can choose one of the following methods:
     * Directly edit the configuration.csv, 
