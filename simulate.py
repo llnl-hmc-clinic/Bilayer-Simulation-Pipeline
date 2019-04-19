@@ -74,17 +74,12 @@ def importcsv(csvfile):
 	A helper function that keeps track of the number of runs. It returns the
 	index of the current run and make changes to the global variable of next_run.
 """
-def run_number():
+def runNumber():
 	global next_run
 	n = next_run
 	next_run += 1
 	print(f"Set next_run to {next_run}")
 	return n
-
-def relaxationRun():
-	return 0
-def productionRun():
-	return 0
 
 """
 	Simulate is the function that call bash commands to manage the file 
@@ -118,7 +113,7 @@ def simulate(lipids, bilayer):
 	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
 	args += "-asym " + str(bilayer[2])
 	n += 1
-	run_num = "run" + str(run_number())
+	run_num = "run" + str(runNumber())
 	tout = open(f'{run_num}.out', 'w')
 	terr = open(f'{run_num}.err', 'w')
 
