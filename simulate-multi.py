@@ -28,9 +28,9 @@ iniConfig = './configurations.ini'#this is the input file in ini format
 data = {} #this collects the simulation parameters from the configuration file
 initialRun = 0#this keeps track of the number of runs we are starting from
 SYSTEM_SIZE = ["12", "12", "10"]#this is the system size of the simulation
-run_type = sys.argv #this is the system arguments that either includes a run-type or not
-maxAttempt = 3
-
+runType = sys.argv #this is the system arguments that either includes a run-type or not
+maxAttempt = 3 #this is the max number of attempts for simulations that failed
+maxMulti = 4 #this is the max number of simulations that can be done simultaneously
 
 """ isLast function is the function that checks whether this entry is the last 
 	entry. If it is, it returns true as well as the last entry.
@@ -197,6 +197,13 @@ def simulate(lipids, bilayer,runName):
 			tlog.write("{0} simulation failed for {1}\n".format(dirname, runName))
 		os.chdir("..")
 	os.chdir("..")
+	dirname = str(int(float(bilayer[-1][1])*1000)) + "fs"
+	currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
+	if (not(os.path.isfile(currentfile))):
+		os.system("rm -r {0}".format(runName))
+		simulate(lipids, bilayer,runName)
+	else:
+		os.system("sbatch 20fs.sh 5 {0}/20fs".format(runName))
 
 """
 	In the main function we create a queue of simulations and run them in parallel through 
@@ -219,9 +226,6 @@ def main():
 			for i in range(NoS):
 				simulation.append(value['sim{0}'.format(i)])
 			queue.append(simulation)
-	ps = []
-	newQueue = []
-	n = 0
 	#check for the current folders and start new runs following those folders
 	existing = []
 	for x in os.listdir('.'):
@@ -229,12 +233,11 @@ def main():
 		if m:
 			existing.append(int(m.group(1)))
 	if existing:
-		initialRun = max(existing) + 1
 		n = max(existing) + 1
 	else:
-		initialRun = 0
 		n = 0
 	#start the simulations from the queue
+	ps = []
 	while len(queue) > 0:
 		e = queue.pop(0)
 		for j in range(3):
@@ -242,52 +245,12 @@ def main():
 			p = multiprocessing.Process(target=simulate, args=(lipidtype, e, runName))
 			ps.append(p)
 			p.start()
-			newQueue.append(e)
 			n += 1
+			if len(ps) == maxMulti:
+				for p in ps:
+					p.join()
+				ps = []
 	for p in ps:
 		p.join()
-	#restart simulations that were not finished
-	newNewQueue = []
-	n = initialRun
-	while len(newQueue) > 0:
-		e = newQueue.pop(0)
-		dirname = str(int(float(e[-1][1])*1000)) + "fs"
-		currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
-		runName = "run" + str(n)
-		if (not(os.path.isfile(currentfile))):
-			p = multiprocessing.Process(target=simulate, args=(lipidtype, e, runName))
-			ps.append(p)
-			p.start()
-		newNewQueue.append(e)
-	for p in ps:
-		p.join()
-	n = initialRun
-	#check again for the unfinished simulations and restart them
-	while len(newNewQueue) > 0:
-		e = newNewQueue.pop(0)
-		dirname = str(int(float(e[-1][1])*1000)) + "fs"
-		currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
-		runName = "run" + str(n)
-		print(runName)			
-		if (not(os.path.isfile(currentfile))):
-			p = multiprocessing.Process(target=simulate, args=(lipidtype, e, runName))
-			ps.append(p)
-			p.start()
-	for p in ps:
-		p.join()
-	#Get the number of folders after our simulations
-	existing = []
-	for x in os.listdir('.'):
-		m = re.search('run(\d+).*', x)
-		if m:
-			existing.append(int(m.group(1)))
-	if existing:
-		nextRun = max(existing)
-	else:
-		nextRun = 0
-	#do analysis for our simulations
-	for i in range(nextRun - initialRun):
-		runName = "run{0}".format(initialRun + i)
-		os.system("python3 analysis.py {0}".format(runName))
 
 main()
