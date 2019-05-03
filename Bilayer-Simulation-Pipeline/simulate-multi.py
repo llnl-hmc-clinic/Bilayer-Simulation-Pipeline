@@ -187,8 +187,7 @@ def simulate(lipids, bilayer,runName):
 			tlog.write("{0} simulation failed for {1}\n".format(dirname, runName))
 		os.chdir("..")
 	os.chdir("..")
-	dirname = str(int(float(bilayer[-1][1])*1000)) + "fs"
-	currentfile = "{0}/{1}/{1}.xtc".format(n, dirname)
+	currentfile = "{0}/{1}/{1}.xtc".format(runName, dirname)
 	if (not(os.path.isfile(currentfile))):
 		os.system("rm -r {0}".format(runName))
 		simulate(lipids, bilayer,runName)
