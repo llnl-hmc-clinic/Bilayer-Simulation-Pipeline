@@ -23,11 +23,11 @@ purpose: This program will serve the purpose of creating simulations of energy
 import sys,re,os,math, csv,random,subprocess,configparser,multiprocessing,tempfile,datetime, platform, analysis
 import numpy as np
 
-csvConfig = "./configurations.csv"#this is the input file in csv format
-iniConfig = './configurations.ini'#this is the input file in ini format
+dirName = ''#this is the directory where we can get the needed files from
+configFile = './configuration.ini'#this is the input file in form of configParser
 data = {} #this collects the simulation parameters from the configuration file
 next_run = 0#this keeps track of the number of runs we are doing
-SYSTEM_SIZE = ["12", "12", "10"]#this is the system size of the simulation
+systemSize = []#this is the system size of the simulation
 run_type = sys.argv #this is the system arguments that either includes a run-type or not
 maxAttempt = 3
 
@@ -43,32 +43,20 @@ def isLast(itr):
     old = new
   yield True, old
 
-""" importcsv imports a csv file that has specs for simulations and convert it 
-	to a dictionary.
-"""
 
-def importcsv(csvfile):
-	with open(csvfile, 'r') as fin:
-		reader=csv.reader(fin, skipinitialspace=True, quotechar="'")
-		entry = [0]
-		for row in reader:
-			if('simulation' in row[0] or 'simulation' in entry[0]):				
-				if('simulation' in row[0]):
-					entry = next(reader)
-				if('simulation' in entry[0]):
-					exchange = row
-					row = entry
-					entry = exchange
-				data[row[0]]= {}
-				#keeps recording data in one simulation
-				while 'simulation' not in entry[0] and 'end' not in entry[0]:
-					data[row[0]][entry[0]]= entry[1:]
-					for j in range(0,len(entry)): 
-					#prevents empty cells from being read
-						if(entry[j] == ''):
-							data[row[0]][entry[0]]= entry[1:j]
-							break
-					entry = next(reader)
+def importConfig(iniFile):
+	global systemSize
+	global data
+	global dirname
+	config = configparser.ConfigParser()
+	config.read('configuration.ini')
+	systemSize = config['general']['systemSize'].split(', ')
+	dirName = config['paths']['dir']
+	for section in config:
+		if (section[:10] == 'simulation'):
+			data[section] = {}
+			for name in config[section]:
+				data[section][name] = config[section][name].split(', ')
 
 """
 	A helper function that keeps track of the number of runs. It returns the
@@ -110,7 +98,7 @@ def simulate(lipids, bilayer):
 			n += 1
 		i += 1
 	descr += "W "
-	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
+	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(systemSize[0], systemSize[1], systemSize[2])
 	args += "-asym " + str(bilayer[2])
 	n += 1
 	run_num = "run" + str(runNumber())
@@ -125,14 +113,14 @@ def simulate(lipids, bilayer):
 	os.system("echo {0} >> description.txt".format(Atextnote))
 	os.system("mkdir em")
 	os.chdir("em")
-	commands = "python2.7 ../../files/insane.py {0}".format(args)
+	commands = "python2.7 {1}/files/insane.py {0}".format(args, dirName)
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	os.system("cat ../../files/header.txt top.top > topol.top")
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':	
 		os.system("sed -i ' ' '5d' topol.top") #for mac
 	else:		
 		os.system("sed -i '5d' topol.top") #for linux 
-	os.system("cp ../../files/martini_v2.x_new-rf.mdp ../em/")
+	os.system("cp {0}}/files/martini_v2.x_new-rf.mdp ../em/".format(dirName))
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':
 		os.system('sed -i " " "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][0]))
 		os.system('sed -i " " "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][1]))
@@ -179,7 +167,7 @@ def simulate(lipids, bilayer):
 
 def main():
 	global next_run
-	importcsv(csvConfig)
+	importConfig(configFile)
 	existing = []
 	for x in os.listdir('.'):
 		m = re.search('run(\d+).*', x)
@@ -191,9 +179,9 @@ def main():
 		next_run = 0
 	queue = []
 	for key, value in data.items():
-		lipidtype = value['lipid type']
-		upper = value['upperLeaflet']
-		lower = value['lowerLeaflet']
+		lipidtype = value['lipids']
+		upper = value['upper']
+		lower = value['lower']
 		asymmetry = value['asymmetry']
 		NoS = len(value)-4 #the number of keys
 		for asym in asymmetry:
