@@ -1,3 +1,4 @@
+ #!/usr/bin/env python3
 import os, configparser
 
 dirName = ''
@@ -5,14 +6,15 @@ dirName = ''
 def main():
 	config = configparser.ConfigParser()
 	config.read('configuration.ini')
-	dirName = config['paths']['dir']
+	dirName = os.path.expanduser(config['paths']['dir'])
+	with open('files/header.txt', 'w') as f:
+		f.write(f'#include "{dirName}/files/martini_v2.2.itp"\n')
+		f.write(f'#include "{dirName}/files/martini_v2.0_ions.itp"\n')
+		f.write(f'#include "{dirName}/files/martini_v2.0_all.itp"\n')
+		f.write(f'#include "{dirName}/files/martini_v2.0_PAP6_02.itp"\n')
 	os.chdir("..")
-	retVal = os.getcwd()
-	parentDir = config['paths']['parentDir']
-	folderName = config['paths']['folderName']
-	os.chdir(os.path.expanduser(parentDir))
-	os.system("mkdir {0}".format(folderName))
-	os.chdir(retVal)
-	os.system("cp -r 'Bilayer-Simulation-Pipeline' {0}".format(dirName))
+	parentDir = dirName = os.path.expanduser(config['paths']['parentDir'])
+	folderName = dirName = os.path.expanduser(config['paths']['folderName'])
+	os.system("cp -r 'Bilayer-Simulation-Pipeline' {0}".format(parentDir))
 
 main()

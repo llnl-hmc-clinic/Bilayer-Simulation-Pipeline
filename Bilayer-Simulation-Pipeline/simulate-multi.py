@@ -23,13 +23,13 @@ purpose: This program will serve the purpose of creating simulations of energy
 import sys,re,os,math, csv,random,subprocess,configparser,multiprocessing,tempfile,datetime, platform
 import numpy as np
 
-csvConfig = "./configurations.csv"#this is the input file in csv format
-iniConfig = './configurations.ini'#this is the input file in ini format
+filesDir = ''#this is the directory where we can get the needed files from
+configFile = './configuration.ini'#this is the input file in form of configParser
 data = {} #this collects the simulation parameters from the configuration file
-initialRun = 0#this keeps track of the number of runs we are starting from
-SYSTEM_SIZE = ["12", "12", "10"]#this is the system size of the simulation
-runType = sys.argv #this is the system arguments that either includes a run-type or not
-maxAttempt = 3 #this is the max number of attempts for simulations that failed
+initialRun = 0#this keeps track of the number of runs we are doing
+systemSize = []#this is the system size of the simulation
+run_type = sys.argv #this is the system arguments that either includes a run-type or not
+maxAttempt = 3
 maxMulti = 4 #this is the max number of simulations that can be done simultaneously
 
 """ isLast function is the function that checks whether this entry is the last 
@@ -43,33 +43,23 @@ def isLast(itr):
     old = new
   yield True, old
 
-""" importcsv imports a csv file that has specs for simulations and convert it 
-	to a dictionary.
+"""importConfig() will import the configuration file and make changes to the
+   global parameters that are configurized in the configuration file.
 """
 
-def importcsv(csvfile):
-	with open(csvfile, 'r') as fin:
-		reader=csv.reader(fin, skipinitialspace=True, quotechar="'")
-		entry = [0]
-		for row in reader:
-			if('simulation' in row[0] or 'simulation' in entry[0]):				
-				if('simulation' in row[0]):
-					entry = next(reader)
-				if('simulation' in entry[0]):
-					exchange = row
-					row = entry
-					entry = exchange
-				data[row[0]]= {}
-				#keeps recording data in one simulation
-				while 'simulation' not in entry[0] and 'end' not in entry[0]:
-					data[row[0]][entry[0]]= entry[1:]
-					for j in range(0,len(entry)): 
-					#prevents empty cells from being read
-						if(entry[j] == ''):
-							data[row[0]][entry[0]]= entry[1:j]
-							break
-					entry = next(reader)
-
+def importConfig(iniFile):
+	global systemSize
+	global data
+	global filesDir
+	config = configparser.ConfigParser()
+	config.read('configuration.ini')
+	systemSize = config['general']['systemSize'].split(', ')
+	filesDir = os.path.expanduser(config['paths']['dir'])
+	for section in config:
+		if (section[:10] == 'simulation'):
+			data[section] = {}
+			for name in config[section]:
+				data[section][name] = config[section][name].split(', ')
 """
 	A helper function that keeps track of the number of runs. It returns the
 	index of the current run and make changes to the global variable of nextRun.
@@ -110,7 +100,7 @@ def simulate(lipids, bilayer,runName):
 			n += 1
 		i += 1
 	descr += "W "
-	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
+	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(systemSize[0], systemSize[1], systemSize[2])
 	args += "-asym " + str(bilayer[2])
 	n += 1
 
@@ -129,7 +119,7 @@ def simulate(lipids, bilayer,runName):
 	os.chdir("em")
 	print("Start inserting membrane for {0}".format(runName))
 	tlog.write("Start inserting membrane for {0}\n".format(runName))
-	commands = "python2.7 ../../files/insane.py {0}".format(args)
+	commands = "python2.7 {1}/files/insane.py {0}".format(args, filesDir)
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	if os.path.isfile("bilayer.gro"): 
 		print("membrane inserted for {0}".format(runName))
@@ -137,12 +127,12 @@ def simulate(lipids, bilayer,runName):
 	else:
 		print("membrane insertion failed for {0}".format(runName))
 		tlog.write("membrane inserted\n")
-	os.system("cat ../../files/header.txt top.top > topol.top")
+	os.system("cat {0}/files/header.txt top.top > topol.top".format(filesDir))
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':
 		os.system("sed -i ' ' '5d' topol.top") #for mac
 	else:
 		os.system("sed -i '5d' topol.top") #for linux 
-	os.system("cp ../../files/martini_v2.x_new-rf.mdp ../em/")
+	os.system("cp {0}/files/martini_v2.x_new-rf.mdp ../em/".format(filesDir))
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':
 		os.system('sed -i " " "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][0]))
 		os.system('sed -i " " "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][1]))
@@ -174,7 +164,7 @@ def simulate(lipids, bilayer,runName):
 		os.system("mkdir {0}".format(dirname))#create a new directory named after the timestep of the simulation
 		os.system("cp {0}/{0}.gro {0}/topol.top {1}".format(lastdir, dirname))	
 		os.chdir(dirname)
-		os.system("cp ../../files/martini_v2.x_new-rf.mdp ../{0}/index.ndx ../{1}/".format(lastdir, dirname))
+		os.system("cp {2}/files/martini_v2.x_new-rf.mdp ../{0}/index.ndx ../{1}/".format(lastdir, dirname, filesDir))
 		if platform.system() == 'Darwin' or platform.system() == 'macosx':	
 			os.system('sed -i " " "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][0]))
 			os.system('sed -i " " "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][1]))
@@ -198,12 +188,14 @@ def simulate(lipids, bilayer,runName):
 		os.chdir("..")
 	os.chdir("..")
 	dirname = str(int(float(bilayer[-1][1])*1000)) + "fs"
-	currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
+	currentfile = "{0}/{1}/{1}.xtc".format(n, dirname)
 	if (not(os.path.isfile(currentfile))):
 		os.system("rm -r {0}".format(runName))
 		simulate(lipids, bilayer,runName)
 	else:
-		os.system("sbatch 20fs.sh 5 {0}/20fs".format(runName))
+		currLocation = os.getcwd() 
+		targetRun = currLocation + "/" + runName
+		os.system("python3 {2}/analysis.py {0} {1}".format(runName, targetRun, filesDir))
 
 """
 	In the main function we create a queue of simulations and run them in parallel through 
@@ -212,13 +204,13 @@ def simulate(lipids, bilayer,runName):
 
 def main():
 	global initialRun	
-	importcsv(csvConfig)
+	importConfig(configFile)
 	queue = []
 	#add the simulations into a queue
 	for key, value in data.items():
-		lipidtype = value['lipid type']
-		upper = value['upperLeaflet']
-		lower = value['lowerLeaflet']
+		lipidtype = value['lipids']
+		upper = value['upper']
+		lower = value['lower']
 		asymmetry = value['asymmetry']
 		NoS = len(value)-4 #the number of keys
 		for asym in asymmetry:
