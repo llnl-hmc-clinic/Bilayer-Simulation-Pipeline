@@ -526,7 +526,7 @@ def analyze(dirList, resultsFP):
 
 	resultFile.close()
 
-analyze([sys.argv[1]], "analysisResults" + sys.argv[1] + ".txt")
+analyze([sys.argv[1]], f"{sys.argv[1]}/analysisResults.txt")
 
 
 
