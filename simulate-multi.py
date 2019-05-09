@@ -23,53 +23,31 @@ purpose: This program will serve the purpose of creating simulations of energy
 import sys,re,os,math, csv,random,subprocess,configparser,multiprocessing,tempfile,datetime, platform
 import numpy as np
 
-csvConfig = "./configurations.csv"#this is the input file in csv format
-iniConfig = './configurations.ini'#this is the input file in ini format
+filesDir = ''#this is the directory where we can get the needed files from
+configFile = './configuration.ini'#this is the input file in form of configParser
 data = {} #this collects the simulation parameters from the configuration file
-initialRun = 0#this keeps track of the number of runs we are starting from
-SYSTEM_SIZE = ["12", "12", "10"]#this is the system size of the simulation
-runType = sys.argv #this is the system arguments that either includes a run-type or not
-maxAttempt = 3 #this is the max number of attempts for simulations that failed
-maxMulti = 4 #this is the max number of simulations that can be done simultaneously
+initialRun = 0#this keeps track of the number of runs we are doing
+systemSize = []#this is the system size of the simulation
+run_type = sys.argv #this is the system arguments that either includes a run-type or not
+maxMulti = 4 #this is the max number of simulations that can be done simultaneously using multiprocessing
 
-""" isLast function is the function that checks whether this entry is the last 
-	entry. If it is, it returns true as well as the last entry.
+"""importConfig() will import the configuration file and make changes to the
+   global parameters that are configurized in the configuration file.
 """
 
-def isLast(itr):
-  old = itr.next()
-  for new in itr:
-    yield False, old
-    old = new
-  yield True, old
-
-""" importcsv imports a csv file that has specs for simulations and convert it 
-	to a dictionary.
-"""
-
-def importcsv(csvfile):
-	with open(csvfile, 'r') as fin:
-		reader=csv.reader(fin, skipinitialspace=True, quotechar="'")
-		entry = [0]
-		for row in reader:
-			if('simulation' in row[0] or 'simulation' in entry[0]):				
-				if('simulation' in row[0]):
-					entry = next(reader)
-				if('simulation' in entry[0]):
-					exchange = row
-					row = entry
-					entry = exchange
-				data[row[0]]= {}
-				#keeps recording data in one simulation
-				while 'simulation' not in entry[0] and 'end' not in entry[0]:
-					data[row[0]][entry[0]]= entry[1:]
-					for j in range(0,len(entry)): 
-					#prevents empty cells from being read
-						if(entry[j] == ''):
-							data[row[0]][entry[0]]= entry[1:j]
-							break
-					entry = next(reader)
-
+def importConfig(iniFile):
+	global systemSize
+	global data
+	global filesDir
+	config = configparser.ConfigParser()
+	config.read('configuration.ini')
+	systemSize = config['general']['systemSize'].split(', ')
+	filesDir = os.path.expanduser(config['paths']['dir'])
+	for section in config:
+		if (section[:10] == 'simulation'):
+			data[section] = {}
+			for name in config[section]:
+				data[section][name] = config[section][name].split(', ')
 """
 	A helper function that keeps track of the number of runs. It returns the
 	index of the current run and make changes to the global variable of nextRun.
@@ -88,7 +66,7 @@ def runNumber():
 
 def simulate(lipids, bilayer,runName):
 	args = ""#arguments passed for initial simulation
-	n = 0
+	n = 0#the arguments for the number of types of lipids in the simulation
 	descr = ""#description of types of lipids that will be used in command lines
 	counts = ""#counts for the number of lipids
 	Utextnote = "upperLeaflet:"
@@ -97,7 +75,8 @@ def simulate(lipids, bilayer,runName):
 	#a description text for lowerleaflet in each folder that specifies the simulation
 	Atextnote = "asymmetry: " + bilayer[2]
 	i = 0
-	for l in lipids: #create parameters for insane.py and gromacs.
+	#create arguments for insane.py.
+	for l in lipids:
 		if int(bilayer[0][i]) > 0:
 			args += "-u " + l + ":" + bilayer[0][i] + " "
 			Utextnote += l + ": " + bilayer[0][i] + ", "
@@ -110,12 +89,13 @@ def simulate(lipids, bilayer,runName):
 			n += 1
 		i += 1
 	descr += "W "
-	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(SYSTEM_SIZE[0], SYSTEM_SIZE[1], SYSTEM_SIZE[2])
+	args += "-pbc square -sol W -salt 0.15 -x {} -y {} -z {} -o bilayer.gro -p top.top ".format(systemSize[0], systemSize[1], systemSize[2])
 	args += "-asym " + str(bilayer[2])
 	n += 1
 
 	#call gromacs commands for energy minimization
 	print("{0} starts".format(runName))
+	#create a directory for simulation of the current bilayer
 	os.system("mkdir {0}".format(runName))
 	os.chdir(runName)
 	tout = open('{0}.out'.format(runName), 'w')
@@ -125,11 +105,13 @@ def simulate(lipids, bilayer,runName):
 	os.system("echo {0} >description.txt".format(Utextnote))
 	os.system("echo {0} >> description.txt".format(Ltextnote))
 	os.system("echo {0} >> description.txt".format(Atextnote))
+	#create a sub-directory for energy minimization
 	os.system("mkdir em")
 	os.chdir("em")
 	print("Start inserting membrane for {0}".format(runName))
 	tlog.write("Start inserting membrane for {0}\n".format(runName))
-	commands = "python2.7 ../../files/insane.py {0}".format(args)
+	#insert the membrane for energy minimization
+	commands = "python2.7 {1}/files/insane.py {0}".format(args, filesDir)
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 	if os.path.isfile("bilayer.gro"): 
 		print("membrane inserted for {0}".format(runName))
@@ -137,12 +119,13 @@ def simulate(lipids, bilayer,runName):
 	else:
 		print("membrane insertion failed for {0}".format(runName))
 		tlog.write("membrane inserted\n")
-	os.system("cat ../../files/header.txt top.top > topol.top")
+	os.system("cat {0}/files/header.txt top.top > topol.top".format(filesDir))
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':
 		os.system("sed -i ' ' '5d' topol.top") #for mac
 	else:
 		os.system("sed -i '5d' topol.top") #for linux 
-	os.system("cp ../../files/martini_v2.x_new-rf.mdp ../em/")
+	os.system("cp {0}/files/martini_v2.x_new-rf.mdp ../em/".format(filesDir))
+	#Change the mdp file as the user configuration of the energy minimization simulation
 	if platform.system() == 'Darwin' or platform.system() == 'macosx':
 		os.system('sed -i " " "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][0]))
 		os.system('sed -i " " "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][1]))
@@ -153,12 +136,16 @@ def simulate(lipids, bilayer,runName):
 		os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[3][2]))
 	print("start energy minimization for {0}".format(runName))
 	tlog.write("start energy minimization\n")
+	#set the simulation environment for the simulation
 	commands = '(echo del 1-200; echo "r W | r NA+ | r CL-"; echo name 1 Solvent; echo !1; echo name 2 Membrane; echo q) | gmx make_ndx -f bilayer.gro -o index.ndx'
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+	#create the trajectory file
 	commands = "gmx grompp -f martini_v2.x_new-rf.mdp -c bilayer.gro -p topol.top -n index.ndx -o em.tpr"
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+	#run the simulation
 	commands = "gmx mdrun -deffnm em -v -nt {0} -dlb yes".format(bilayer[3][3])
 	subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+	#check for whether the simulation has been finished or not
 	if os.path.isfile("em.gro"): 
 		print("energy minimization finished for {0}".format(runName))
 		tlog.write("energy minimization finished\n")
@@ -167,14 +154,16 @@ def simulate(lipids, bilayer,runName):
 		tlog.write("energy minimization failed\n")
 	os.chdir("..")
 	dirname = "em"
-	#call gromacs commands for the simulations following the energy minimization
+	# Use the results of energy minization for further configurized simulations
 	for i in range(len(bilayer)-4):
 		lastdir = dirname
+		#create a new directory named after the timestep of the simulation
 		dirname = str(int(float(bilayer[i+4][1])*1000)) + "fs"
 		os.system("mkdir {0}".format(dirname))#create a new directory named after the timestep of the simulation
 		os.system("cp {0}/{0}.gro {0}/topol.top {1}".format(lastdir, dirname))	
 		os.chdir(dirname)
-		os.system("cp ../../files/martini_v2.x_new-rf.mdp ../{0}/index.ndx ../{1}/".format(lastdir, dirname))
+		#Change the mdp file as the user configuration of the energy minimization step
+		os.system("cp {2}/files/martini_v2.x_new-rf.mdp ../{0}/index.ndx ../{1}/".format(lastdir, dirname, filesDir))
 		if platform.system() == 'Darwin' or platform.system() == 'macosx':	
 			os.system('sed -i " " "s/REPLACE1/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][0]))
 			os.system('sed -i " " "s/REPLACE2/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][1]))
@@ -185,8 +174,10 @@ def simulate(lipids, bilayer,runName):
 			os.system('sed -i "s/REPLACE3/{0}/" martini_v2.x_new-rf.mdp'.format(bilayer[i+4][2]))
 		print("{0} simulation starts for {1}".format(dirname, runName))
 		tlog.write("{0} simulation starts for {1}\n".format(dirname, runName))
+		# create the trajectory file
 		commands = "gmx grompp -f martini_v2.x_new-rf.mdp -c {0}.gro -p topol.top -n index.ndx -o {1}.tpr".format(lastdir, dirname)
 		subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
+		# run the simulation
 		commands = "gmx mdrun -deffnm {0} -v -nt {1} -dlb yes".format(dirname, bilayer[i+4][3])
 		subprocess.call(commands, stdout=tout, stderr=terr, shell = True)
 		if(os.path.isfile("{0}.gro".format(dirname))): 
@@ -197,13 +188,16 @@ def simulate(lipids, bilayer,runName):
 			tlog.write("{0} simulation failed for {1}\n".format(dirname, runName))
 		os.chdir("..")
 	os.chdir("..")
-	dirname = str(int(float(bilayer[-1][1])*1000)) + "fs"
-	currentfile = "run{0}/{1}/{1}.xtc".format(n, dirname)
+	currentfile = "{0}/{1}/{1}.xtc".format(runName, dirname)
+	#if the simulation failed, restart the simulation
 	if (not(os.path.isfile(currentfile))):
 		os.system("rm -r {0}".format(runName))
 		simulate(lipids, bilayer,runName)
+	#if the simulation succeeds, start the analysis
 	else:
-		os.system("sbatch 20fs.sh 5 {0}/20fs".format(runName))
+		currLocation = os.getcwd() 
+		targetRun = currLocation + "/" + runName
+		os.system("python3 {1}/analysisFinal.py {0}".format(targetRun, filesDir))
 
 """
 	In the main function we create a queue of simulations and run them in parallel through 
@@ -212,15 +206,16 @@ def simulate(lipids, bilayer,runName):
 
 def main():
 	global initialRun	
-	importcsv(csvConfig)
+	importConfig(configFile)
 	queue = []
 	#add the simulations into a queue
 	for key, value in data.items():
-		lipidtype = value['lipid type']
-		upper = value['upperLeaflet']
-		lower = value['lowerLeaflet']
-		asymmetry = value['asymmetry']
+		lipidtype = value['lipids'] #the types of lipids in the bilayer
+		upper = value['upper'] #the composition of lipids in the upper leaflet
+		lower = value['lower'] #the composition of lipids in the lower leaflet
+		asymmetry = value['asymmetry'] #the value for asymmetry
 		NoS = len(value)-4 #the number of keys
+		#Add each bilayer according to asymmetry into the queue for simulation
 		for asym in asymmetry:
 			simulation = [upper, lower, asym]
 			for i in range(NoS):
@@ -236,7 +231,7 @@ def main():
 		n = max(existing) + 1
 	else:
 		n = 0
-	#start the simulations from the queue
+	#Initiate the simulations for each bilayer, multiprocessing multiple simulations at a time
 	ps = []
 	while len(queue) > 0:
 		e = queue.pop(0)
