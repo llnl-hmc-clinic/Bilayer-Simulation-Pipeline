@@ -30,7 +30,7 @@ Here is a simple guideline on how to use our scripts:
 	* simulate.py or simulate-multi.py (the latter is for multi-processing multiple simulations at the same time
 
 5. Directly run the following command for the simulation to run:
-	*python3 simulate.py (or simulate-multi.py
+	* python3 simulate.py (or simulate-multi.py
 
 If you also want to do analysis on your simulation results, you should install 
 fatslim and tensor tool:
@@ -46,6 +46,6 @@ can use it to calculate stress fields in 3D. It is found at:
 https://mdstress.org/index.php/gromacs-ls/
 
 Additional Information:
-	* You can do simulations without doing the anlysis with our pipeline.
-	* The files folder and Mara_Python3 folder holds the scripts that are necessary to simulations. You can make changes to them when you think fit.
-	* The pipeline folder contains a version specifically for simulations on syrah supercomputing system of llnl.
+* You can do simulations without doing the anlysis with our pipeline.
+* The files folder and Mara_Python3 folder holds the scripts that are necessary to simulations. You can make changes to them when you think fit.
+* The pipeline folder contains a version specifically for simulations on syrah supercomputing system of llnl.
