@@ -34,15 +34,18 @@ Here is a simple guideline on how to use our scripts:
 
 If you also want to do analysis on your simulation results, you should install 
 fatslim and tensor tool:
+
 FATSLiM stands for “Fast Analysis Toolbox for Simulations of Lipid Membranes,” it is used
 to calculate the physical properties from MD trajectories. You can install it from:
+
 http://fatslim.github.io/
 
 Tensor tool is a python utility in GROMACS-LS, a custom version of Gromacs v4.5.5. You
 can use it to calculate stress fields in 3D. It is found at:
+
 https://mdstress.org/index.php/gromacs-ls/
 
 Additional Information:
-	*You can do simulations without doing the anlysis with our pipeline.
-	*The files folder and Mara_Python3 folder holds the scripts that are necessary to simulations. You can make changes to them when you think fit.
-	*The pipeline folder contains a version specifically for simulations on syrah supercomputing system of llnl.
+	* You can do simulations without doing the anlysis with our pipeline.
+	* The files folder and Mara_Python3 folder holds the scripts that are necessary to simulations. You can make changes to them when you think fit.
+	* The pipeline folder contains a version specifically for simulations on syrah supercomputing system of llnl.
