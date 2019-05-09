@@ -1,4 +1,0 @@
-#include "../../files/martini_v2.2.itp"
-#include "../../files/martini_v2.0_ions.itp"
-#include "../../files/martini_v2.0_all.itp"
-#include "../../files/martini_v2.0_PAP6_02.itp"
