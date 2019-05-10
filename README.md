@@ -50,3 +50,4 @@ Additional Information:
 - You can do simulations without doing the anlysis with our pipeline.
 - The files folder and Mara_Python3 folder holds the scripts that are necessary to simulations. You can make changes to them when you think fit.
 - The pipeline folder contains a version specifically for simulations on syrah supercomputing system of llnl.
+- If you have any question about our pipeline, please email meteorli527@gmail.com.
